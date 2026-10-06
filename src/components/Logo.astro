@@ -1,0 +1,13 @@
+---
+// Temporary text wordmark. Swap for the real logo image (the wavy "ANTI SOCIAL AUDIO" mark) once the files are exported from WordPress.
+interface Props { class?: string }
+const { class: className } = Astro.props;
+---
+<a class:list={['logo', className]} href="/" aria-label="Antisocial Audio home">
+  <span>ANTISOCIAL</span><span>AUDIO</span>
+</a>
+
+<style>
+  .logo { display: inline-block; color: var(--white); font-weight: 900; font-size: 1.1rem; line-height: .94; letter-spacing: -.04em; }
+  .logo span { display: block; }
+</style>

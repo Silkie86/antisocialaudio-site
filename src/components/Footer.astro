@@ -1,0 +1,25 @@
+---
+import Logo from './Logo.astro';
+import { footerNav, site } from '../data/site';
+
+const year = new Date().getFullYear();
+---
+<footer class="wrap foot">
+  <div>
+    <Logo />
+    <nav aria-label="Footer">
+      {footerNav.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+    <p>© {year} {site.name}</p>
+  </div>
+</footer>
+
+<style>
+  .foot > div {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px;
+    padding-block: 28px 36px; border-top: 1px solid var(--line); font-size: .88rem; color: var(--muted);
+  }
+  nav { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+  nav a { padding: 6px 0; }
+  nav a:hover { color: var(--yellow); }
+</style>

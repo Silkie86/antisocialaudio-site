@@ -1,0 +1,17 @@
+---
+import { bookingHref } from '../data/site';
+
+interface Props { heading?: string }
+const { heading = 'Not sure where to start?' } = Astro.props;
+---
+<aside class="card card--yellow consult">
+  <p class="kick">Free · 30 minutes</p>
+  <h2>{heading}</h2>
+  <p>Book a <strong>free 30-minute, no-strings-attached consultation</strong> with Solomon. Ask anything and get a taste of what Antisocial Audio is all about.</p>
+  <a class="btn btn--block" href={bookingHref('consult')}>Book your free consult</a>
+</aside>
+
+<style>
+  .consult { display: grid; gap: 14px; border-radius: 22px; padding: clamp(22px, 4vw, 34px); }
+  h2 { font-size: clamp(1.6rem, 3.4vw, 2.1rem); }
+</style>

@@ -1,0 +1,34 @@
+---
+import Logo from './Logo.astro';
+import { nav } from '../data/site';
+
+const path = Astro.url.pathname;
+---
+<header class="top">
+  <div class="wrap bar">
+    <Logo />
+    <nav class="menu" aria-label="Main">
+      {nav.map((item) => (
+        <a href={item.href} aria-current={item.href === path ? 'page' : undefined}>{item.label}</a>
+      ))}
+    </nav>
+    <a class="btn book" href="/book/">Book</a>
+  </div>
+</header>
+
+<style>
+  .top { background: var(--nav); }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; padding-block: 12px; }
+  .menu {
+    order: 3; width: 100%; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px;
+    font-size: .84rem; font-weight: 500; border-top: 1px solid var(--line); padding-top: 6px;
+  }
+  .menu a { padding: 6px 0; }
+  .menu a:hover, .menu a[aria-current='page'] { color: var(--yellow); }
+  .book { margin-left: auto; min-height: 44px; padding: .5em 1.1em; }
+  @media (min-width: 600px) { .menu { justify-content: flex-start; gap: 4px 28px; } }
+  @media (min-width: 900px) {
+    .menu { order: 0; width: auto; flex: 1; justify-content: center; gap: 32px; font-size: .95rem; border: 0; padding: 0; }
+    .book { margin-left: 0; }
+  }
+</style>
