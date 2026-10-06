@@ -12,9 +12,11 @@ interface Props {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   /** Keep the page out of search results (and give it no canonical address), e.g. the 404 page. */
   noindex?: boolean;
+  /** Where the header's Book button goes. Only the DJ page changes it, to its own enquiry form. */
+  bookHref?: string;
 }
 
-const { title, description = site.description, jsonLd, noindex = false } = Astro.props;
+const { title, description = site.description, jsonLd, noindex = false, bookHref = '/book/' } = Astro.props;
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name}: bass music production lessons with Silkie`;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
@@ -28,7 +30,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <meta name="theme-color" content="#070707" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/* Every weight is used near the top of every page (nav 500, links 600, buttons 700, headings 800, hero 900),
+        so all are preloaded: a weight that arrives late reflows the page and can push a #link's target out of view. */}
     <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/poppins-500.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/poppins-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/poppins-800.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/poppins-900.woff2" as="font" type="font/woff2" crossorigin />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.name} />
@@ -44,7 +52,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
-    <Header />
+    <Header bookHref={bookHref} />
     <main id="main">
       <slot />
     </main>

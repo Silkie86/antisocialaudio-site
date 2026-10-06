@@ -93,8 +93,8 @@ const money = (n: number) => gbp(n, { pence: true });
   }
 
   @supports selector(:has(a)) {
-    /* Only the checked package's link shows, below all the cards. */
-    .go { display: none; order: 1; margin-top: 6px; }
+    /* Only the checked package's link shows: straight under its card on phones, below all the cards from 780px. */
+    .go { display: none; margin-top: 6px; }
     .plan:has(input:checked) + .go { display: flex; }
     .later { order: 2; }
     @media (min-width: 780px) {

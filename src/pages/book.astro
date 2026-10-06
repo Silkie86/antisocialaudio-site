@@ -1,30 +1,29 @@
 ---
 import Base from '../layouts/Base.astro';
-import FaqList from '../components/FaqList.astro';
-import {
-  site, booking, legacyBookingUrl, packages, packagePrice, payments, gbp, hourlyRate, workshop, nextWorkshop, services, daws,
-} from '../data/site';
-import { packHours, listJoin } from '../components/home/pricing';
+import BookAction from '../components/BookAction.astro';
+import { site, booking, legacyBooking, payments, gbp, hourlyRate, workshop, nextWorkshop, services, daws } from '../data/site';
+import { packageRows, packHours, listJoin } from '../components/home/pricing';
 
 // Booking hub. Every booking button on the site falls back to /book/#<key> until its link is set in site.ts,
 // so each option below has an anchor matching its key: consult, lesson, pack5, pack10, workshop.
-// When booking[key] is set, the option shows a real booking button. Until then it points to the old booking page
-// (legacyBookingUrl) if one is set, or says online booking opens soon.
+// What each option shows in place of its booking button (the real button, the old booking page, or "opens soon")
+// is decided in one place, src/components/BookAction.astro.
 type Key = keyof typeof booking;
-const live = (key: Key) => booking[key];
-const missing = (Object.keys(booking) as Key[]).filter((key) => !booking[key]);
-const anyMissing = missing.length > 0;
-const allMissing = missing.length === Object.keys(booking).length;
-
-// An old booking page on this site's own domain would redirect straight back here (public/_redirects), so it is never used.
-const bareHost = (href: string) => new URL(href, site.url).hostname.replace(/^www\./, '');
-const legacy = legacyBookingUrl && bareHost(legacyBookingUrl) !== bareHost(site.url) ? legacyBookingUrl : null;
-if (anyMissing) {
+const next = nextWorkshop();
+const unset = (Object.keys(booking) as Key[]).filter((key) => !booking[key]);
+const legacy = legacyBooking();
+if (unset.length > 0) {
   console.warn(
-    `[book] No booking link yet for: ${missing.join(', ')}. ` +
+    `[book] No booking link yet for: ${unset.join(', ')}. ` +
       (legacy ? 'Those options send people to legacyBookingUrl.' : 'Those options cannot be booked online. Set them in src/data/site.ts.'),
   );
 }
+// The notice at the top only counts options that could be booked now: with no date set, the workshop
+// shows its own "opens when the next date is announced" note and no button, whatever its link.
+const open = (Object.keys(booking) as Key[]).filter((key) => key !== 'workshop' || next);
+const missing = open.filter((key) => !booking[key]);
+const anyMissing = missing.length > 0;
+const allMissing = missing.length === open.length;
 
 const notice = legacy
   ? allMissing
@@ -38,13 +37,11 @@ const notice = legacy
       ? 'One option below cannot be booked online just yet. It is marked, and opens soon.'
       : 'Some options below cannot be booked online just yet. They are marked, and open soon.';
 
-const plans = packages.map((p) => ({ ...p, ...packagePrice(p) }));
 const lessonFrom = gbp(hourlyRate);
-const next = nextWorkshop();
 
 const jump = [
   { key: 'consult', label: 'Free consult', price: 'Free' },
-  ...plans.map((p) => ({ key: p.key, label: p.name, price: gbp(p.total, { pence: true }) })),
+  ...packageRows.map((p) => ({ key: p.key, label: p.name, price: gbp(p.total, { pence: true }) })),
   { key: 'workshop', label: 'Workshop', price: gbp(workshop.price) },
 ];
 
@@ -65,7 +62,7 @@ const jsonLd = {
     name: 'Booking options',
     itemListElement: [
       offer('Free 30-minute consultation', 0, 'consult'),
-      ...plans.map((p) => offer(`1:1 lessons: ${p.name}`, p.total, p.key)),
+      ...packageRows.map((p) => offer(`1:1 lessons: ${p.name}`, p.total, p.key)),
       offer(workshop.title, workshop.price, 'workshop'),
     ],
   },
@@ -75,9 +72,9 @@ const description = `Book a free 30-minute consult, 1:1 bass music production le
 
 // Ways to pay, as set in site.ts (payments).
 const payWays = [
-  { on: payments.card, key: 'card', title: 'Card', text: 'Pay by debit or credit card at checkout.' },
-  { on: payments.paypal, key: 'paypal', title: 'PayPal', text: 'Prefer PayPal? Pay with your PayPal account at checkout.' },
-  { on: payments.payLater, key: 'later', title: 'Buy now, pay later', text: 'Spread the cost. Options are shown at checkout and may vary based on your location.' },
+  { on: payments.card, label: 'Debit or credit card' },
+  { on: payments.paypal, label: 'PayPal' },
+  { on: payments.payLater, label: 'Buy now, pay later' },
 ].filter((w) => w.on);
 ---
 <Base title="Book lessons, packs and workshops" description={description} jsonLd={jsonLd}>
@@ -110,7 +107,7 @@ const payWays = [
     </div>
   </section>
 
-  <!-- Free consult -->
+  {/* Free consult */}
   <section class="sec wrap first" aria-labelledby="consult-h">
     <article id="consult" class="card card--yellow opt consult">
       <div class="opt-info">
@@ -129,24 +126,12 @@ const payWays = [
       <div class="opt-buy">
         <span class="here">Your pick</span>
         <p class="price"><b>Free</b> <span>30 minutes</span></p>
-        {live('consult') ? (
-          <a class="btn btn--block" href={live('consult')}>Book your free consult</a>
-        ) : legacy ? (
-          <div class="moving">
-            <p>Online booking is moving to a new system.</p>
-            <a class="btn btn--block" href={legacy}>Book on our current booking page</a>
-          </div>
-        ) : (
-          <>
-            <Fragment set:html="<!-- TODO: set booking.consult in src/data/site.ts (the Cal.com link) and a booking button appears here. -->" />
-            <p class="soon">Online booking for the free consult opens soon.</p>
-          </>
-        )}
+        <BookAction key="consult" label="Book your free consult" what="the free consult" />
       </div>
     </article>
   </section>
 
-  <!-- 1:1 lessons -->
+  {/* 1:1 lessons */}
   <section class="sec wrap" aria-labelledby="lessons-h">
     <div class="sec-head">
       <p class="kick">1:1 Lessons</p>
@@ -154,9 +139,9 @@ const payWays = [
       <p>Every hour is one-to-one with {site.tutor.alias}, online. Book a single hour, or buy a pack and pay less for each hour.</p>
     </div>
     <div class="plans">
-      {plans.map((p) => (
-        <article id={p.key} class:list={['opt', 'plan', { best: 'best' in p && p.best }]} aria-labelledby={`${p.key}-h`}>
-          {'best' in p && p.best && <p class="flag">Best value</p>}
+      {packageRows.map((p) => (
+        <article id={p.key} class:list={['opt', 'plan', { best: p.best }]} aria-labelledby={`${p.key}-h`}>
+          {p.best && <p class="flag">Best value</p>}
           <div class="plan-main">
             <span class="here">Your pick</span>
             <h3 id={`${p.key}-h`}>{p.name}</h3>
@@ -172,27 +157,18 @@ const payWays = [
               </div>
             </dl>
             <div class="plan-foot">
-              {live(p.key) ? (
-                <a class:list={['btn', 'btn--block', { 'btn--yellow': 'best' in p && p.best }]} href={live(p.key)}>
-                  {p.hours === 1 ? 'Book' : 'Buy'} {p.name} · {gbp(p.total, { pence: true })}
-                </a>
-              ) : legacy ? (
-                <div class="moving">
-                  <p>Online booking is moving to a new system.</p>
-                  <a class:list={['btn', 'btn--block', { 'btn--yellow': 'best' in p && p.best }]} href={legacy}>Book on our current booking page</a>
-                </div>
-              ) : (
-                <>
-                  <Fragment set:html={`<!-- TODO: set booking.${p.key} in src/data/site.ts (the Cal.com link) and a booking button appears here. -->`} />
-                  <p class="soon">Online booking for {p.hours === 1 ? 'single lessons' : `the ${p.hours}-hour pack`} opens soon.</p>
-                </>
-              )}
+              <BookAction
+                key={p.key}
+                label={`${p.hours === 1 ? 'Book' : 'Buy'} ${p.name} · ${gbp(p.total, { pence: true })}`}
+                what={p.hours === 1 ? 'single lessons' : `the ${p.hours}-hour pack`}
+                yellow={p.best}
+              />
             </div>
           </div>
         </article>
       ))}
     </div>
-    <!-- TODO: once Cal.com is set up, explain here how pack hours are scheduled (e.g. booked one session at a time). Not stated yet, so left out. -->
+    {/* TODO: once Cal.com is set up, explain here how pack hours are scheduled (e.g. booked one session at a time). Not stated yet, so left out. */}
     <div class="incl">
       <div>
         <p class="lbl">Lessons cover</p>
@@ -209,7 +185,7 @@ const payWays = [
     </div>
   </section>
 
-  <!-- Workshop -->
+  {/* Workshop */}
   <section class="sec wrap" aria-labelledby="workshop-h">
     <article id="workshop" class="card opt ws">
       <div class="opt-info">
@@ -223,7 +199,7 @@ const payWays = [
             <strong><time datetime={next.iso}>{next.long}</time></strong>
           ) : (
             <>
-              <!-- TODO: set workshop.nextDate in src/data/site.ts when the next masterclass is scheduled. -->
+              {/* TODO: set workshop.nextDate in src/data/site.ts when the next masterclass is scheduled; the booking button then appears below. */}
               <strong>Announced soon</strong>
             </>
           )}
@@ -233,60 +209,38 @@ const payWays = [
       <div class="opt-buy">
         <span class="here">Your pick</span>
         <p class="price"><b>{gbp(workshop.price)}</b> <span>per masterclass</span></p>
-        {live('workshop') ? (
-          <a class="btn btn--block" href={live('workshop')}>Book your place · {gbp(workshop.price)}</a>
-        ) : legacy ? (
-          <div class="moving">
-            <p>Online booking is moving to a new system.</p>
-            <a class="btn btn--block" href={legacy}>{next ? 'Book on our current booking page' : 'Check our current booking page'}</a>
-          </div>
-        ) : (
-          <>
-            <Fragment set:html="<!-- TODO: set booking.workshop in src/data/site.ts (the Cal.com link) and a booking button appears here. -->" />
-            <p class="soon">Online booking for workshops opens soon.</p>
-          </>
-        )}
+        {/* No date, nothing to book: no button even once booking.workshop is set (as on the workshops page and the home page). */}
+        <BookAction
+          key="workshop"
+          label={`Book your place · ${gbp(workshop.price)}`}
+          what="workshops"
+          closed={next ? undefined : 'Booking opens when the next date is announced.'}
+        />
       </div>
     </article>
   </section>
 
-  <!-- Paying -->
+  {/* Paying */}
   <section class="sec wrap" aria-labelledby="pay-h">
     <div class="sec-head">
       <p class="kick">Paying</p>
       <h2 id="pay-h">Ways to pay</h2>
       <p>Lessons, packs and workshops are paid for securely at checkout. The free consult costs nothing.</p>
     </div>
-    <!-- TODO: confirm the exact payment methods once Stripe and PayPal are connected to Cal.com, and switch off any that are not offered in payments in src/data/site.ts. -->
+    {/* TODO: confirm the exact payment methods once Stripe and PayPal are connected to Cal.com, and switch off any that are not offered in payments in src/data/site.ts. */}
     {payWays.length > 0 && (
-      <ul class="pay">
-        {payWays.map((w) => (
-          <li class="card">
-            <span class="ico" aria-hidden="true">
-              {w.key === 'card' && <svg viewBox="0 0 24 24" focusable="false"><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 10h19M6.5 15h4" /></svg>}
-              {w.key === 'paypal' && <svg viewBox="0 0 24 24" focusable="false"><path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4h-12A2.5 2.5 0 0 0 3 6.5v11A2.5 2.5 0 0 0 5.5 20h14a1.5 1.5 0 0 0 1.5-1.5V15" /><path d="M3 6.5A2.5 2.5 0 0 0 5.5 9H20a1 1 0 0 1 1 1v5h-4a2 2 0 0 1 0-4h4" /></svg>}
-              {w.key === 'later' && <svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="4.5" width="18" height="16" rx="2.5" /><path d="M3 9.5h18M8 2.5v4M16 2.5v4M8 14h2M14 14h2M8 17h2" /></svg>}
-            </span>
-            <h3>{w.title}</h3>
-            <p>{w.text}</p>
-          </li>
-        ))}
+      <ul class="chips" aria-label="Ways to pay at checkout">
+        {payWays.map((w) => <li>{w.label}</li>)}
       </ul>
     )}
-    <p class="small">All prices are in pounds sterling (GBP).</p>
-  </section>
-
-  <!-- Questions -->
-  <section class="sec wrap" aria-labelledby="faq-h">
-    <div class="faq">
-      <p class="kick">FAQ</p>
-      <h2 id="faq-h">Questions before you book?</h2>
-      <FaqList only={['How do I get a consultation?', 'Which DAWs are covered?', 'What services do you offer?']} />
-      <p class="faq-more">
-        <a href="/faq/">See all questions</a>
-        <a href="#consult">Or start with a free consult</a>
-      </p>
-    </div>
+    <p class="small">
+      {payments.payLater && 'Buy now, pay later options are shown at checkout and may vary based on your location. '}
+      All prices are in pounds sterling (GBP).
+    </p>
+    <p class="after">
+      <a href="/terms/">Before you pay, read our terms</a>
+      <a href="/faq/">More questions? See the FAQ</a>
+    </p>
   </section>
 </Base>
 
@@ -359,22 +313,11 @@ const payWays = [
   .price b { color: var(--white); font-size: clamp(2.4rem, 5vw, 3rem); font-weight: 900; letter-spacing: -0.045em; line-height: 1; }
   .price span { color: var(--muted); font-size: 0.92rem; }
 
-  .moving { display: grid; gap: 10px; }
-  .moving .btn { padding-inline: 0.7em; font-size: 0.9rem; text-wrap: balance; }
-  @media (max-width: 379px) { .moving .btn { font-size: 0.86rem; } .moving .btn::before { display: none; } }
-  .moving p { display: flex; gap: 0.5em; align-items: baseline; color: var(--muted); font-size: 0.86rem; line-height: 1.45; }
-  /* No booking link and no old booking page: a quiet note where the button would be. */
-  .soon {
-    display: flex; gap: 0.5em; align-items: baseline; padding: 12px 14px; border: 1px dashed var(--nav); border-radius: 10px;
-    color: var(--paper); font-size: 0.9rem; font-weight: 600; line-height: 1.45;
-  }
-  .soon::before { content: "\2726"; content: "\2726" / ""; flex: none; color: var(--yellow); }
-  .consult .soon { border-color: color-mix(in srgb, var(--ink) 45%, transparent); }
-  .consult .soon::before { color: var(--ink); }
-  .moving p::before { content: "i"; content: "i" / ""; flex: none; display: inline-grid; place-items: center; width: 1.35em; height: 1.35em; border-radius: 50%; border: 1.5px solid currentColor; font-size: 0.8em; font-weight: 800; font-style: normal; line-height: 1; transform: translateY(-0.05em); }
-
-  /* Consult: yellow card, ink text throughout */
-  .consult :is(p, li, .price span, .moving p) { color: var(--ink); }
+  /* Consult: yellow card, ink text throughout (including the booking note from BookAction) */
+  .consult :is(p, li, .price span) { color: var(--ink); }
+  .consult :global(:is(.soon, .moving p)) { color: var(--ink); }
+  .consult :global(.soon) { border-color: color-mix(in srgb, var(--ink) 45%, transparent); }
+  .consult :global(.soon::before) { color: var(--ink); }
   .consult .price b { color: var(--ink); }
   .consult .spk li::before { color: var(--ink); }
   .consult .here { background: var(--ink); color: var(--yellow); }
@@ -426,26 +369,14 @@ const payWays = [
   .next { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
   .next span { color: var(--muted); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
   .next strong { font-size: 1.15rem; }
-  .more { justify-self: start; color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
+  .more { justify-self: start; padding-block: 4px; color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
   .more:hover { text-decoration-thickness: 2px; }
 
   /* Ways to pay */
-  .pay { display: grid; gap: 16px; }
-  @media (min-width: 780px) { .pay { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); } }
-  .pay li { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; row-gap: 4px; align-content: start; }
-  .pay li .ico { grid-row: span 2; }
-  @media (min-width: 780px) { .pay li { grid-template-columns: 1fr; row-gap: 10px; } .pay li .ico { grid-row: auto; margin-bottom: 4px; } }
-  .pay h3 { font-size: 1.25rem; }
-  .pay p { color: var(--muted); font-size: 0.95rem; }
-  .ico { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: var(--yellow); color: var(--ink); }
-  .ico svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .small { margin-top: 16px; color: var(--muted); font-size: 0.88rem; }
-
-  /* FAQ */
-  .faq { display: grid; gap: 10px; max-width: 820px; }
-  .faq h2 { font-size: clamp(2rem, 5.2vw, 3.4rem); margin-bottom: 14px; }
-  .faq-more { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 18px; }
-  .faq-more a { color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
+  .small { margin-top: 16px; color: var(--muted); font-size: 0.88rem; max-width: 46em; }
+  .after { display: flex; flex-wrap: wrap; gap: 4px 28px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .after a { padding-block: 4px; color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
+  .after a:hover { color: var(--white); }
 
   @media (prefers-reduced-motion: reduce) {
     .jump a:hover { transform: none; }

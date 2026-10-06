@@ -10,6 +10,9 @@ Static site for antisocialaudio.co.uk, built with Astro and hosted as a Cloudfla
 - Package prices are computed from `hourlyRate` and each discount: 1 h £25, 5 h £118.75, 10 h £225.00.
 - Do not invent facts about Silkie, dates, prices, reviews or credentials. Leave a clearly marked placeholder instead.
 - Shared styles: `.wrap`, `.sec`, `.sec-head`, `.kick`, `.spk`, `.btn` (+ `--yellow`, `--ghost`, `--block`), `.pill`, `.card` (+ `--green`, `--yellow`), `.chips`, `.prose`. Page-only styles go in that page's `<style>` block (Astro scopes them).
+- Shared components in `src/components/`: reuse them rather than pasting copies. `Wave` (brand wave; pass a class for spacing), `Steps` (numbered timeline), `Credentials` (tutor block; `dj={false}` hides the DJ line), `BookAction` (what shows under each option on /book/: booking button, old booking page or "opens soon"), `ConsultCard`, `FaqList` (`only` keeps the given order and fails the build on an unknown question).
+- Workshop booking buttons only appear when `nextWorkshop()` returns a date, on every page.
+- Developer notes in `.astro` templates are `{/* TODO … */}` comments, never `<!-- -->`, so they stay out of the public HTML.
 - Every page uses `src/layouts/Base.astro` and passes `title` and `description`. The one exception is the homepage, which passes no `title` so it gets the site's own title rather than "X | Antisocial Audio".
 - No JavaScript unless a feature needs it; when it does, keep it small and inline in the component.
 - Must work from 360px to 1280px+ with no horizontal scroll, visible focus states, and `prefers-reduced-motion` respected.

@@ -64,7 +64,7 @@ const fields: Field[] = [
     type: 'textarea',
     required: true,
     max: 5000,
-    hint: 'Set time and length, line-up, budget: whatever you know so far.',
+    hint: 'Promoter, set time and length, line-up, budget, travel: whatever you know so far.',
     msg: 'Please tell us a little about the event.',
   },
 ];
@@ -122,7 +122,7 @@ const describedBy = (f: Field) => [f.hint && `${id(f.name)}-hint`, `${id(f.name)
       ))}
     </div>
 
-    <!-- Honeypot: hidden from people and screen readers. Bots that fill it in are quietly ignored by the endpoint. -->
+    {/* Honeypot: hidden from people and screen readers. Bots that fill it in are quietly ignored by the endpoint. */}
     <div class="hp" aria-hidden="true">
       <label for="enq-website">Leave this field empty</label>
       <input id="enq-website" name="website" type="text" tabindex="-1" autocomplete="off" />
@@ -134,7 +134,8 @@ const describedBy = (f: Field) => [f.hint && `${id(f.name)}-hint`, `${id(f.name)
         <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
       </>
     ) : (
-      <Fragment set:html="<!-- TODO: Cloudflare Turnstile is off because PUBLIC_TURNSTILE_SITE_KEY was not set when the site was built. Add it as a build variable (see docs/enquiry-form.md) and rebuild; the spam check then appears here. -->" />
+      /* TODO: Cloudflare Turnstile is off because PUBLIC_TURNSTILE_SITE_KEY was not set when the site was built. Add it as a build variable (see docs/enquiry-form.md) and rebuild; the spam check then appears here. */
+      null
     )}
 
     <div class="alert" id="enquiry-error" role="alert" tabindex="-1" data-alert>

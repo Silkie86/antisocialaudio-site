@@ -2,11 +2,18 @@
 import { faq } from '../data/faq';
 
 interface Props {
-  /** Show only these questions (by exact question text). Shows all when omitted. */
+  /** Show only these questions, in this order, by their exact text in src/data/faq.ts. Shows all when omitted. */
   only?: string[];
 }
 const { only } = Astro.props;
-const items = only ? faq.filter((f) => only.includes(f.q)) : faq;
+// A question that is not in faq.ts (say it was reworded there) stops the build, rather than quietly disappearing.
+const items = only
+  ? only.map((q) => {
+      const item = faq.find((f) => f.q === q);
+      if (!item) throw new Error(`FaqList: "${q}" is not a question in src/data/faq.ts. Use the question's exact wording.`);
+      return item;
+    })
+  : faq;
 ---
 <div class="faq-list">
   {items.map((item) => (

@@ -11,15 +11,22 @@ export const site = {
   youtube: 'https://www.youtube.com/channel/UCebmVVxiFO3hf2Za5AT8RkQ',
 };
 
+// DJ Bookings comes last on purpose: lessons and workshops lead, DJ bookings are not front and centre.
 export const nav = [
   { label: 'Lessons', href: '/#lessons' },
   { label: 'Workshops', href: '/workshops/' },
-  { label: 'DJ Bookings', href: '/dj-bookings/' },
   { label: 'Prices', href: '/#prices' },
   { label: 'FAQ', href: '/faq/' },
+  { label: 'DJ Bookings', href: '/dj-bookings/' },
 ];
 
+// The header does not stick, so the footer repeats the main links for anyone at the bottom of a long page.
+// DJ Bookings is left out here, so it keeps just the nav link and the one line in the tutor section.
 export const footerNav = [
+  { label: 'Lessons', href: '/#lessons' },
+  { label: 'Workshops', href: '/workshops/' },
+  { label: 'Prices', href: '/#prices' },
+  { label: 'Book', href: '/book/' },
   { label: 'FAQ', href: '/faq/' },
   { label: 'Terms', href: '/terms/' },
   { label: 'Privacy', href: '/privacy/' },
@@ -43,6 +50,13 @@ export const booking: Record<'consult' | 'lesson' | 'pack5' | 'pack10' | 'worksh
 // (/music-productibook-now/) redirects to /book/ once the domain points at this site, so /book/ ignores
 // any link on this site's own domain rather than send people round in a circle.
 export const legacyBookingUrl: string | null = null;
+
+/** legacyBookingUrl if it can be used: null when it is not set or is on this site's own domain (that would redirect back to /book/). */
+export function legacyBooking(): string | null {
+  if (!legacyBookingUrl) return null;
+  const bareHost = (href: string) => new URL(href, site.url).hostname.replace(/^www\./, '');
+  return bareHost(legacyBookingUrl) === bareHost(site.url) ? null : legacyBookingUrl;
+}
 
 export function bookingHref(key: keyof typeof booking): string {
   return booking[key] ?? `/book/#${key}`;

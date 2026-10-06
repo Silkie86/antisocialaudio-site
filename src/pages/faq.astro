@@ -1,17 +1,14 @@
 ---
-// FAQ page: every question from src/data/faq.ts, the free consult, and a short "pick your path" to finish.
+// FAQ page: every question from src/data/faq.ts, the free consult, and a short "where next" row to finish.
 // The FAQPage structured data is built from the same list, so the page and the schema never drift apart.
 import Base from '../layouts/Base.astro';
 import FaqList from '../components/FaqList.astro';
 import ConsultCard from '../components/ConsultCard.astro';
 import { faq } from '../data/faq';
-import { site, workshop, nextWorkshop, hourlyRate, services, daws, gbp, bookingHref } from '../data/site';
-import { cheapest, listJoin } from '../components/home/pricing';
+import { site, workshop, gbp } from '../data/site';
+import { cheapest } from '../components/home/pricing';
 
 const pageUrl = `${site.url}/faq/`;
-const serviceLine = listJoin(services.map((s, i) => (i === 0 ? s : s.toLowerCase())));
-
-const next = nextWorkshop();
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -53,48 +50,11 @@ const description = `Common questions about one-to-one bass music production les
   </section>
 
   <section class="sec wrap" aria-labelledby="next-title">
-    <h2 id="next-title" class="pick-t">Ready when you are</h2>
-    <div class="paths">
-      <article class="path path--lead" aria-labelledby="path-lessons">
-        <p class="kick">1:1 Lessons</p>
-        <h3 id="path-lessons">One-to-one with {site.tutor.alias}</h3>
-        <p class="sub">Online lessons built around your music and your DAW.</p>
-        <ul class="spk">
-          <li>{serviceLine}</li>
-          <li>{daws.specialist.join(', ')} and more</li>
-        </ul>
-        <div class="cost">
-          <p class="price"><b>{gbp(hourlyRate)}</b><span>per hour</span></p>
-          <p class="note">From {gbp(cheapest.perHour)}/hr with a {cheapest.hours}-hour pack</p>
-        </div>
-        <div class="path-cta">
-          <a class="btn btn--yellow" href={bookingHref('lesson')}>Book a lesson</a>
-          <a class="go" href="/#prices">See packages</a>
-        </div>
-      </article>
-      <article class="path" aria-labelledby="path-workshops">
-        <p class="kick">Workshops · {workshop.where}</p>
-        <h3 id="path-workshops">{workshop.title}</h3>
-        <ul class="spk">
-          {workshop.points.map((point) => <li>{point}</li>)}
-        </ul>
-        <div class="cost">
-          <p class="price"><b>{gbp(workshop.price)}</b><span>per masterclass</span></p>
-          {next ? (
-            <p class="note">Next date: <time datetime={next.iso}>{next.short}</time></p>
-          ) : (
-            <>
-              <Fragment set:html="<!-- TODO: next masterclass date not set yet. Set workshop.nextDate in src/data/site.ts and this shows the date. -->" />
-              <p class="note">Next date announced soon</p>
-            </>
-          )}
-        </div>
-        <div class="path-cta">
-          <a class="btn" href={bookingHref('workshop')}>Book a workshop</a>
-          <a class="go" href="/workshops/">About the workshops</a>
-        </div>
-      </article>
-    </div>
+    <h2 id="next-title" class="kick">Where next</h2>
+    <ul class="next">
+      <li><a href="/#lessons">1:1 lessons, from {gbp(cheapest.perHour)}/hr</a></li>
+      <li><a href="/workshops/">{workshop.title}, {gbp(workshop.price)}</a></li>
+    </ul>
   </section>
 </Base>
 
@@ -117,32 +77,16 @@ const description = `Common questions about one-to-one bass music production les
     .cc { position: sticky; top: 24px; }
   }
 
-  /* Ready when you are: the two paths, compact */
-  .pick-t { margin-bottom: 18px; font-size: clamp(1.35rem, 3vw, 1.75rem); line-height: 1.1; }
-  .paths { display: grid; gap: 16px; }
-  @media (min-width: 820px) { .paths { grid-template-columns: 1fr 1fr; } }
-  .path {
-    display: flex; flex-direction: column; gap: 10px;
-    background: var(--panel); border: 1px solid var(--nav); border-radius: var(--radius); padding: clamp(20px, 3vw, 28px);
+  /* Where next: two links on to the lessons and the workshop */
+  .next { display: grid; gap: 10px; margin-top: 14px; }
+  @media (min-width: 720px) { .next { grid-template-columns: 1fr 1fr; gap: 16px; } }
+  .next a {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 100%; min-height: 64px; padding: 14px 18px;
+    background: var(--panel); border: 1px solid var(--nav); border-radius: 14px;
+    color: var(--white); font-weight: 700; line-height: 1.35; transition: border-color .2s;
   }
-  .path--lead { background: var(--green); border-color: var(--green); }
-  .path--lead .kick { color: var(--white); }
-  .path--lead .kick::before { color: var(--yellow); }
-  .path h3 { font-size: clamp(1.4rem, 2.6vw, 1.7rem); }
-  .sub { color: var(--muted); }
-  .path--lead .sub, .path--lead .price span { color: var(--paper); }
-  .path .spk { margin-top: 2px; }
-  .cost { display: grid; gap: 4px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
-  .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
-  .note { color: var(--muted); font-size: 0.88rem; }
-  .path--lead .note { color: var(--paper); }
-  .price b { color: var(--white); font-size: 2.2rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
-  .price span { color: var(--muted); font-size: 0.9rem; }
-  .path-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 6px; }
-  .path-cta .btn { flex: 1 1 200px; }
-  @media (min-width: 560px) { .path-cta .btn { max-width: 280px; } }
-  .go { padding-block: 4px; color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 2px; }
-  .go:hover { color: var(--white); }
-  .path--lead .go { color: var(--white); }
-  .path--lead .go:hover { text-decoration-color: var(--yellow); }
+  .next a::after { content: "\2192"; content: "\2192" / ""; flex: none; color: var(--yellow); font-size: 1.25rem; transition: transform .2s; }
+  .next a:hover { border-color: var(--yellow); }
+  .next a:hover::after { transform: translateX(3px); }
+  @media (prefers-reduced-motion: reduce) { .next a:hover::after { transform: none; } }
 </style>

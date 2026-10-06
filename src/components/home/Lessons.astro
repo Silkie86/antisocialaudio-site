@@ -1,7 +1,8 @@
 ---
 // Section #lessons: how 1:1 lessons work, what you can learn, and which DAWs are covered.
-import { services, daws, hourlyRate, payments, gbp, bookingHref } from '../../data/site';
+import { services, daws, hourlyRate, gbp, bookingHref } from '../../data/site';
 import { maxDiscountPct, packHours, listJoin } from './pricing';
+import Steps from '../Steps.astro';
 
 // Line icons for the service tiles (24px grid, drawn with the brand stroke). A service without an icon falls back to the sparkle.
 const icons: Record<string, string> = {
@@ -19,7 +20,7 @@ const steps = [
   },
   {
     title: 'Choose your hours',
-    text: `Book a single hour at ${gbp(hourlyRate)}, or save up to ${maxDiscountPct}% with a ${listJoin(packHours.map((h) => `${h}-`), 'or')}hour pack.${payments.payLater ? ' Buy now, pay later options at checkout (they may vary by location).' : ''}`,
+    text: `Book a single hour at ${gbp(hourlyRate)}, or save up to ${maxDiscountPct}% with a ${listJoin(packHours.map((h) => `${h}-`), 'or')}hour pack.`,
   },
   {
     title: 'Learn one-to-one, online',
@@ -33,14 +34,7 @@ const steps = [
     <h2 id="lessons-title">How lessons work</h2>
   </div>
 
-  <ol class="steps">
-    {steps.map((s) => (
-      <li>
-        <h3>{s.title}</h3>
-        <p>{s.text}</p>
-      </li>
-    ))}
-  </ol>
+  <Steps steps={steps} />
 
   <div class="cover">
     <div class="cov cov-g">
@@ -69,34 +63,10 @@ const steps = [
 
   <div class="cta">
     <a class="btn" href={bookingHref('consult')}>Book your free consult</a>
-    <a class="btn btn--ghost" href="#prices">See prices</a>
   </div>
 </section>
 
 <style>
-  .steps { counter-reset: s; display: grid; gap: 30px; }
-  .steps li { counter-increment: s; position: relative; padding-left: 66px; }
-  .steps li::before {
-    content: counter(s); content: counter(s) / "";
-    position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 46px; height: 46px;
-    border-radius: 50%; background: var(--yellow); color: var(--ink); font-weight: 900; font-size: 1.2rem;
-  }
-  .steps li:first-child::before { background: var(--green); color: var(--white); box-shadow: 0 0 0 2px var(--yellow); }
-  .steps li:not(:last-child)::after {
-    content: ""; position: absolute; left: 22px; top: 56px; bottom: -24px; width: 2px;
-    background: linear-gradient(var(--yellow), color-mix(in srgb, var(--yellow) 12%, transparent));
-  }
-  .steps h3 { font-size: 1.3rem; margin: 8px 0 6px; }
-  .steps p { color: var(--muted); text-wrap: pretty; }
-  @media (min-width: 780px) {
-    .steps { grid-template-columns: repeat(3, 1fr); gap: 28px; }
-    .steps li { padding: 68px 12px 0 0; }
-    .steps li:not(:last-child)::after {
-      left: 58px; right: -16px; top: 22px; bottom: auto; width: auto; height: 2px;
-      background: linear-gradient(90deg, var(--yellow), color-mix(in srgb, var(--yellow) 12%, transparent));
-    }
-  }
-
   .cover { display: grid; gap: 16px; margin: clamp(36px, 5vw, 56px) 0 28px; }
   @media (min-width: 780px) { .cover { grid-template-columns: 1.15fr 1fr; } }
   .cov { display: grid; gap: 14px; align-content: start; border-radius: var(--radius); padding: clamp(20px, 4vw, 34px); }

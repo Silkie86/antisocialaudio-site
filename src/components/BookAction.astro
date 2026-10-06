@@ -1,0 +1,53 @@
+---
+// What sits where the booking button goes for one option on /book/. In order:
+// 1. `closed` is set (e.g. a workshop with no date yet): that note, and no button.
+// 2. The option's link is set in `booking` in src/data/site.ts: the real booking button.
+// 3. legacyBookingUrl is set (and is not on this site's own domain, see legacyBooking()): a button to the old booking page.
+// 4. Otherwise: a note that online booking for this option opens soon, and why.
+// TODO: set each link in `booking` in src/data/site.ts (the Cal.com link) and its booking button appears here.
+import { booking, legacyBooking } from '../data/site';
+
+interface Props {
+  /** The option, as named in `booking` in site.ts. */
+  key: keyof typeof booking;
+  /** Button text once the booking link is set, e.g. 'Book your free consult'. */
+  label: string;
+  /** What the "opens soon" note calls this option, e.g. 'the 10-hour pack'. */
+  what: string;
+  /** Yellow button (the best-value pack). */
+  yellow?: boolean;
+  /** Show this note instead of any button. */
+  closed?: string;
+}
+const { key, label, what, yellow = false, closed } = Astro.props;
+
+const legacy = legacyBooking();
+const live = booking[key];
+const btn = ['btn', 'btn--block', { 'btn--yellow': yellow }];
+---
+{closed ? (
+  <p class="soon">{closed}</p>
+) : live ? (
+  <a class:list={btn} href={live}>{label}</a>
+) : legacy ? (
+  <div class="moving">
+    <p>Online booking is moving to a new system.</p>
+    <a class:list={btn} href={legacy}>Book on our current booking page</a>
+  </div>
+) : (
+  <p class="soon">Online booking for {what} opens soon, as we move to a new booking system.</p>
+)}
+
+<style>
+  .moving { display: grid; gap: 10px; }
+  .moving .btn { padding-inline: 0.7em; font-size: 0.9rem; text-wrap: balance; }
+  @media (max-width: 379px) { .moving .btn { font-size: 0.86rem; } .moving .btn::before { display: none; } }
+  .moving p { display: flex; gap: 0.5em; align-items: baseline; color: var(--muted); font-size: 0.86rem; line-height: 1.45; }
+  .moving p::before { content: "i"; content: "i" / ""; flex: none; display: inline-grid; place-items: center; width: 1.35em; height: 1.35em; border-radius: 50%; border: 1.5px solid currentColor; font-size: 0.8em; font-weight: 800; font-style: normal; line-height: 1; transform: translateY(-0.05em); }
+  /* No booking link and no old booking page: a quiet note where the button would be. */
+  .soon {
+    display: flex; gap: 0.5em; align-items: baseline; padding: 12px 14px; border: 1px dashed var(--nav); border-radius: 10px;
+    color: var(--paper); font-size: 0.9rem; font-weight: 600; line-height: 1.45;
+  }
+  .soon::before { content: "\2726"; content: "\2726" / ""; flex: none; color: var(--yellow); }
+</style>

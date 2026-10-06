@@ -1,6 +1,6 @@
 ---
 // A video poster that loads YouTube only when clicked, so the page stays fast and no YouTube cookies are set until then.
-// Without a video ID it links out to the YouTube channel instead.
+// Without a video ID it links out to the YouTube channel instead, captioned as the channel rather than as one video.
 import { site, video } from '../data/site';
 
 const id = video.youtubeId;
@@ -12,7 +12,7 @@ const href = id ? `https://www.youtube.com/watch?v=${id}` : site.youtube;
     <span class="play" aria-hidden="true"></span>
     <span class="cap">
       <span class="kick">{id ? 'Play video' : 'Watch on YouTube'}</span>
-      <span class="cap-t">{video.title}</span>
+      <span class="cap-t">{id ? video.title : `${site.name} on YouTube`}</span>
     </span>
     {!id && <span class="visually-hidden"> (opens YouTube in a new tab)</span>}
   </a>

@@ -68,7 +68,7 @@ Just below it, `legacyBookingUrl` can point at an old booking page to use meanwh
 
 ### The next workshop date
 
-Set `nextDate` inside `workshop` to the date in year-month-day form, in quote marks. For example, 16 November 2026 would be `nextDate: '2026-11-16',`. The site then shows the date wherever the workshop appears, and the workshops page shows its booking button. Until then they say the next date will be announced soon. After the workshop, set the next date, or put `null` back (no quote marks) if there isn't one yet. (The site checks the date when it is built, so a date that has passed disappears the next time the site is published.)
+Set `nextDate` inside `workshop` to the date in year-month-day form, in quote marks. For example, 16 November 2026 would be `nextDate: '2026-11-16',`. The site then shows the date wherever the workshop appears, with a button to book it (on the home page, the workshops page and `/book/`). Until then they say the next date will be announced soon and show no booking button, even if the workshop's booking link is set. After the workshop, set the next date, or put `null` back (no quote marks) if there isn't one yet. (The site checks the date when it is built, so a date that has passed disappears the next time the site is published.)
 
 ### The FAQ
 
@@ -82,6 +82,8 @@ Each question in `src/data/faq.ts` looks like this:
 ```
 
 They appear on the FAQ page in the order they are listed. The information Google reads from the FAQ page is built from the same list, so it never goes out of date.
+
+The home page shows three of these questions, picked by their exact wording in `src/pages/index.astro` (the line starting `<FaqList only=`). If you reword one of those three in `faq.ts`, change it there too: otherwise the build stops with a message naming the question it could not find.
 
 ## Seeing your changes before they go live
 
@@ -197,7 +199,7 @@ Cloudflare treats `/events` and `/events/` as different addresses, so each old p
 | --- | --- |
 | `src/data/` | All facts: prices, booking links, workshop, review, FAQ |
 | `src/pages/` | One file per page |
-| `src/components/` | Shared pieces: header, footer, logo, FAQ list, enquiry form, video |
+| `src/components/` | Shared pieces: header, footer, logo, FAQ list, enquiry form, video, tutor credentials, numbered steps, the brand wave, and the booking button on `/book/` |
 | `src/layouts/Base.astro` | The page frame every page uses: title, description, search-engine tags |
 | `src/styles/global.css` | Brand colours, Poppins and shared styles. The site is dark only. |
 | `public/` | Files published as they are: fonts, favicon, `_redirects`, `_headers`, `robots.txt` |
