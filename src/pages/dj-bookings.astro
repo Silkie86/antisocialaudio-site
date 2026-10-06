@@ -1,0 +1,177 @@
+---
+// DJ bookings: a quiet, artist-style page for Silkie with a booking enquiry form.
+// Kept off the homepage's "Pick your path" on purpose; it is reached from the nav and one line in the tutor section.
+import Base from '../layouts/Base.astro';
+import EnquiryForm from '../components/EnquiryForm.astro';
+import { site } from '../data/site';
+
+const { name, alias, years } = site.tutor;
+const labelList = new Intl.ListFormat('en-GB', { style: 'long', type: 'conjunction' }).format(site.labels);
+const pageUrl = `${site.url}/dj-bookings/`;
+
+const title = `${alias} DJ bookings`;
+// Kept to about 155 characters so search results show it in full.
+const description = `Book ${alias} (${name}), UK dubstep producer and DJ with releases on ${labelList}. Send a booking enquiry.`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  name: title,
+  url: pageUrl,
+  description,
+  isPartOf: { '@type': 'WebSite', name: site.name, url: site.url },
+  mainEntity: {
+    '@type': 'Person',
+    name,
+    alternateName: alias,
+    jobTitle: 'Dubstep producer and DJ',
+    description: `UK dubstep producer and DJ with releases on ${labelList}.`,
+    knowsAbout: ['Dubstep', 'Bass music production', 'Bitwig Studio'],
+    hasCredential: { '@type': 'EducationalOccupationalCredential', name: 'Bitwig Certified Trainer' },
+  },
+};
+---
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <section class="hero" aria-labelledby="dj-title">
+    <div class="wrap hero-in">
+      <div class="hero-copy">
+        <p class="kick" aria-hidden="true">DJ bookings</p>
+        <h1 id="dj-title" class="name">{alias}<span class="visually-hidden">: DJ bookings</span></h1>
+        <p class="real"><span>{name}</span> <span class="role">UK dubstep producer &amp; DJ</span></p>
+        <p class="lede">Booking enquiries for {alias}'s DJ sets. Tell us about your event and we'll get back to you by email.</p>
+        <a class="btn" href="#enquiry">Send a booking enquiry</a>
+      </div>
+      <!-- Decorative record. TODO: swap for a press shot of Silkie once one is supplied (no stock photos). -->
+      <div class="record" aria-hidden="true"></div>
+    </div>
+
+    <div class="wrap">
+      <svg class="wave" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path class="w2" d="M0 50Q14 9 27 50Q41 98 55 50Q68-3 82 50Q95 106 109 50Q123-8 136 50Q150 107 164 50Q177-5 191 50Q205 100 218 50Q232 6 245 50Q259 87 273 50Q286 20 300 50Q314 73 327 50Q341 34 355 50Q368 61 382 50Q395 42 409 50Q423 56 436 50Q450 43 464 50Q477 59 491 50Q505 36 518 50Q532 70 545 50Q559 23 573 50Q586 84 600 50" />
+        <path d="M0 50Q15 42 30 50Q45 62 60 50Q75 30 90 50Q105 80 120 50Q135 8 150 50Q165 104 180 50Q195-16 210 50Q225 126 240 50Q255-34 270 50Q285 138 300 50Q315-38 330 50Q345 134 360 50Q375-26 390 50Q405 116 420 50Q435-4 450 50Q465 92 480 50Q495 20 510 50Q525 70 540 50Q555 38 570 50Q585 58 600 50" />
+      </svg>
+    </div>
+  </section>
+
+  <section class="lineup" aria-labelledby="labels-h">
+    <div class="wrap">
+      <h2 id="labels-h" class="kick">Released on</h2>
+      <ul class="bill">
+        {site.labels.map((label) => <li>{label}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="bio-h">
+    <div class="bio">
+      <div class="bio-text">
+        <p class="kick">Biography</p>
+        <h2 id="bio-h">About {alias}</h2>
+        <p>{name}, aka {alias}, is a UK dubstep producer and DJ. He has been producing dubstep for {years} years, with releases on {labelList}.</p>
+        <p>He is also a Bitwig Certified Trainer, and teaches bass music production here at {site.name}, one-to-one and in live workshops.</p>
+        <!-- TODO: add Silkie's own words here once supplied: notable gigs, residencies, radio, press quotes and links to mixes. Use only what he provides. -->
+      </div>
+      <dl class="sheet">
+        <div><dt>Name</dt><dd>{name}</dd></div>
+        <div><dt>Scene</dt><dd>UK dubstep</dd></div>
+        <div><dt>Producing</dt><dd>{years} years</dd></div>
+        <div><dt>Credential</dt><dd>Bitwig Certified Trainer</dd></div>
+        <div><dt>Teaches</dt><dd><a href="/#lessons">1:1 lessons</a> and <a href="/workshops/">workshops</a></dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="enquiry" aria-labelledby="enquiry-h">
+    <div class="enq">
+      <div class="enq-intro">
+        <p class="kick">Booking enquiry</p>
+        <h2 id="enquiry-h">Book {alias}</h2>
+        <p>Share what you know so far and we'll reply by email.</p>
+        <h3>Useful to include</h3>
+        <ul class="spk">
+          <li>The event, the promoter and the venue</li>
+          <li>The date, set time and set length</li>
+          <li>Who else is on the line-up</li>
+          <li>Your budget, and any travel details</li>
+        </ul>
+      </div>
+      <EnquiryForm />
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* Hero: the artist name, set huge */
+  .hero {
+    position: relative; overflow: clip;
+    background: radial-gradient(60% 75% at 88% 8%, color-mix(in srgb, var(--green) 34%, transparent), transparent 66%);
+  }
+  .hero-in { position: relative; display: grid; gap: 32px; padding-block: clamp(32px, 5vw, 64px) 0; }
+  .hero-copy { position: relative; z-index: 1; }
+  .name {
+    margin: 0.14em 0 0 -0.045em;
+    font-size: clamp(5.75rem, 30vw, 13.5rem); font-weight: 900; letter-spacing: -0.06em; line-height: 0.82;
+  }
+  .real {
+    display: flex; flex-wrap: wrap; gap: 2px 0.75em; margin-top: clamp(16px, 2.2vw, 24px);
+    color: var(--white); font-weight: 600; font-size: clamp(1.05rem, 2vw, 1.3rem); line-height: 1.35;
+  }
+  .role::before { content: "\2726"; content: "\2726" / ""; margin-right: 0.6em; color: var(--yellow); font-size: 0.7em; vertical-align: 0.15em; }
+  .lede { margin-top: 10px; max-width: 30em; color: var(--muted); font-size: clamp(1rem, 1.6vw, 1.125rem); text-wrap: pretty; }
+  .hero-copy .btn { margin-top: 26px; }
+
+  /* A record in brand colours: green label, yellow ring, dark grooves, a soft sheen. */
+  .record {
+    position: absolute; z-index: 0; top: -22vw; right: -40vw; width: 80vw; aspect-ratio: 1; border-radius: 50%; opacity: 0.4;
+    background:
+      radial-gradient(circle closest-side, var(--ink) 0 2.2%, var(--yellow) 2.4% 4.2%, var(--green) 4.4% 31%, var(--ink) 31.4% 33%, transparent 33.4% 97%, var(--nav) 97.5%),
+      conic-gradient(from 25deg, transparent 0 6%, color-mix(in srgb, var(--paper) 10%, transparent) 11%, transparent 17% 50%, color-mix(in srgb, var(--paper) 8%, transparent) 61%, transparent 67%),
+      repeating-radial-gradient(circle closest-side, var(--panel) 0 2px, var(--panel-2) 2px 4px);
+  }
+  @media (min-width: 600px) { .record { top: -8vw; right: -20vw; width: 56vw; opacity: 0.5; } }
+  @media (min-width: 900px) {
+    .hero-in { grid-template-columns: 1.15fr 1fr; align-items: center; }
+    .record { position: relative; right: auto; top: auto; width: min(100%, 470px); justify-self: end; opacity: 1; }
+  }
+
+  .wave { display: block; width: 100%; height: clamp(40px, 6vw, 76px); margin-block: clamp(32px, 5vw, 56px) 0; overflow: visible; }
+  .wave path { fill: none; stroke: var(--yellow); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+  .wave .w2 { stroke: var(--green); stroke-width: 3; }
+
+  /* Labels set like a line-up poster */
+  .lineup { padding-top: clamp(44px, 7vw, 96px); }
+  .lineup .kick { display: block; margin-bottom: clamp(18px, 2.6vw, 30px); text-align: center; }
+  .bill {
+    display: grid; justify-items: center; gap: 0.12em;
+    padding-block: clamp(22px, 3.4vw, 40px); border-block: 1px solid var(--line);
+    font-size: clamp(2.1rem, 7.4vw, 5.6rem); font-weight: 900; letter-spacing: -0.045em; line-height: 0.95;
+    text-align: center; text-transform: uppercase; text-wrap: balance;
+  }
+  .bill li { color: var(--white); }
+  .bill li:nth-child(even) { color: var(--yellow); }
+
+  /* Biography + fact sheet */
+  .bio { display: grid; gap: 36px; }
+  @media (min-width: 900px) { .bio { grid-template-columns: 1.35fr 1fr; gap: 72px; align-items: start; } }
+  .bio-text { display: grid; gap: 14px; }
+  .bio-text h2 { margin-bottom: 4px; font-size: clamp(2rem, 5.2vw, 3.4rem); }
+  .bio-text p:not(.kick) { max-width: 36em; color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.1rem); text-wrap: pretty; }
+  .sheet { border-top: 2px solid var(--yellow); }
+  .sheet div { display: grid; grid-template-columns: minmax(7.5em, 0.8fr) 1.6fr; gap: 4px 16px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+  .sheet dt { padding-top: 0.3em; color: var(--muted); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .sheet dd { margin: 0; color: var(--white); font-weight: 700; }
+  .sheet a { display: inline-block; padding-block: 2px; color: var(--yellow); text-decoration: underline; text-underline-offset: 4px; }
+  .sheet a:hover { color: var(--white); text-decoration-color: var(--yellow); }
+
+  /* Enquiry */
+  .enq { display: grid; gap: 32px; }
+  @media (min-width: 980px) {
+    .enq { grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); gap: 56px; align-items: start; }
+    .enq-intro { position: sticky; top: 24px; }
+  }
+  .enq-intro { display: grid; gap: 14px; align-content: start; }
+  .enq-intro h2 { font-size: clamp(2rem, 5.2vw, 3.4rem); }
+  .enq-intro > p:not(.kick) { color: var(--muted); font-size: 1.05rem; }
+  .enq-intro h3 { margin-top: 12px; font-size: 1.1rem; }
+  .enq-intro .spk { gap: 8px; color: var(--paper); }
+</style>

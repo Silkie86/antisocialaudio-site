@@ -1,4 +1,113 @@
 ---
+// Homepage, Direction A "Pick your path": two doors (1:1 Lessons lead, Workshops), tutor credentials,
+// how lessons work, package picker, video + review, short FAQ and the free consult.
 import Base from '../layouts/Base.astro';
+import Hero from '../components/home/Hero.astro';
+import Credentials from '../components/home/Credentials.astro';
+import Lessons from '../components/home/Lessons.astro';
+import PackagePicker from '../components/home/PackagePicker.astro';
+import VideoPoster from '../components/VideoPoster.astro';
+import Review from '../components/Review.astro';
+import FaqList from '../components/FaqList.astro';
+import ConsultCard from '../components/ConsultCard.astro';
+import { site, workshop, hourlyRate, gbp, bookingHref } from '../data/site';
+import { cheapest, packageRows } from '../components/home/pricing';
+
+// About 155 characters, so search results show it in full.
+const description = `1:1 online bass music production lessons with ${site.tutor.alias}, UK dubstep producer and Bitwig Certified Trainer. ${gbp(hourlyRate)}/hr, packs from ${gbp(cheapest.perHour)}/hr, plus Zoom workshops.`;
+
+const abs = (href: string) => new URL(href, site.url).href;
+const orgId = `${site.url}/#organization`;
+
+// Structured data: only facts from site.ts (no address, phone or ratings).
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebSite', '@id': `${site.url}/#website`, url: `${site.url}/`, name: site.name, inLanguage: 'en-GB', publisher: { '@id': orgId } },
+    {
+      '@type': 'Organization',
+      '@id': orgId,
+      name: site.name,
+      url: `${site.url}/`,
+      description: site.description,
+      slogan: site.tagline,
+      sameAs: [site.youtube],
+    },
+    {
+      '@type': 'Person',
+      '@id': `${site.url}/#silkie`,
+      name: site.tutor.name,
+      alternateName: site.tutor.alias,
+      description: 'UK dubstep producer and Bitwig Certified Trainer.',
+      worksFor: { '@id': orgId },
+    },
+    {
+      '@type': 'Service',
+      name: 'One-to-one online bass music production lessons',
+      serviceType: 'Music production tuition',
+      provider: { '@id': orgId },
+      offers: packageRows.map((p) => ({
+        '@type': 'Offer',
+        name: `${p.name} of 1:1 lessons`,
+        price: p.total.toFixed(2),
+        priceCurrency: 'GBP',
+        url: abs(bookingHref(p.key)),
+      })),
+    },
+    {
+      '@type': 'Service',
+      name: workshop.title,
+      serviceType: 'Live online music production workshop',
+      provider: { '@id': orgId },
+      offers: { '@type': 'Offer', price: workshop.price.toFixed(2), priceCurrency: 'GBP', url: abs(bookingHref('workshop')) },
+    },
+  ],
+};
 ---
-<Base><div class="wrap sec"><h1>Stub</h1></div></Base>
+<Base description={description} jsonLd={jsonLd}>
+  <Hero />
+  <Credentials />
+  <Lessons />
+  <PackagePicker />
+
+  <section class="sec wrap" aria-labelledby="watch-title">
+    <div class="sec-head">
+      <p class="kick">See it, hear it</p>
+      <h2 id="watch-title">Watch Silkie teach</h2>
+    </div>
+    <div class="proof">
+      <VideoPoster />
+      <Review />
+    </div>
+  </section>
+
+  <section class="sec wrap faqwrap" aria-labelledby="faq-title">
+    <div class="faq">
+      <p class="kick">FAQ</p>
+      <h2 id="faq-title">Questions before you book?</h2>
+      <FaqList only={['What are your rates?', 'Which DAWs are covered?', 'How do I book?']} />
+      <a class="more" href="/faq/">See all questions</a>
+    </div>
+    <div class="cc">
+      <ConsultCard heading="Not sure which path?" />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .proof { display: grid; gap: 16px; }
+  @media (min-width: 880px) { .proof { grid-template-columns: 1.55fr 1fr; } }
+
+  .faqwrap { display: grid; gap: 28px; }
+  .faq { display: grid; gap: 10px; align-content: start; }
+  .faq h2 { font-size: clamp(2rem, 5.2vw, 3.4rem); margin-bottom: 14px; }
+  .more {
+    justify-self: start; margin-top: 14px; padding-block: 4px;
+    color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 2px;
+  }
+  .more:hover { color: var(--white); }
+  @media (min-width: 900px) {
+    .faqwrap { grid-template-columns: 1.6fr 1fr; gap: 56px; align-items: start; }
+    .cc { position: sticky; top: 24px; }
+  }
+</style>

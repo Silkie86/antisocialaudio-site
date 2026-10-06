@@ -5,11 +5,12 @@ import Footer from '../components/Footer.astro';
 import { site } from '../data/site';
 
 interface Props {
-  /** Page title. The site name is added after it, except on the home page. */
+  /** Page title. The site name is added after it. Only the home page leaves it out, to get the site's own title. */
   title?: string;
   description?: string;
   /** Structured data (schema.org) for this page, as a plain object. */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Keep the page out of search results (and give it no canonical address), e.g. the 404 page. */
   noindex?: boolean;
 }
 
@@ -24,8 +25,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
-    {noindex && <meta name="robots" content="noindex" />}
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <meta name="theme-color" content="#070707" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin />
@@ -34,11 +34,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:locale" content="en_GB" />
     <meta name="twitter:card" content="summary" />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {/* "<" is escaped so no text in the data can ever close the script element early. */}
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />}
     <slot name="head" />
   </head>
   <body>

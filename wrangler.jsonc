@@ -1,0 +1,39 @@
+// Cloudflare config for antisocialaudio.co.uk, deployed as a Worker with static assets (free plan).
+//
+// The built site in dist/ is served as static assets, which are free and unlimited. The Worker script
+// (functions/worker.js) only runs for /api/*, where it handles the DJ booking enquiry form and emails
+// it through Email Routing. This is a Worker rather than Cloudflare Pages because Pages Functions cannot
+// use the send_email binding.
+//
+// Deploy: build first (npm run build), then `npx wrangler deploy`, or connect the repo in Workers Builds.
+// Setup and dashboard settings: docs/enquiry-form.md
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "antisocialaudio-site",
+  "main": "functions/worker.js",
+  "compatibility_date": "2026-10-01",
+
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Astro builds /page/index.html, so /page/ is the address of every page.
+    "html_handling": "auto-trailing-slash",
+    // Unknown addresses get dist/404.html (src/pages/404.astro) with a 404 status.
+    "not_found_handling": "404-page",
+    // Send the form endpoint straight to the Worker.
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Lets the Worker email the enquiry to a verified Email Routing destination address (free on all plans).
+  // To lock it to one recipient, add "destination_address": "<your verified address>".
+  "send_email": [{ "name": "EMAIL" }],
+
+  // ENQUIRY_TO, ENQUIRY_FROM and TURNSTILE_SECRET_KEY are set in the Cloudflare dashboard, not in this file,
+  // so no addresses or secrets live in the repository. keep_vars stops a deploy from removing them.
+  // PUBLIC_TURNSTILE_SITE_KEY is different: the page needs it when it is built, so it is a build variable
+  // (Settings > Build > Variables and secrets), not a runtime one.
+  "keep_vars": true,
+
+  // Worker logs in the dashboard, to see why an enquiry failed. The enquiry text itself is never logged.
+  "observability": { "enabled": true }
+}

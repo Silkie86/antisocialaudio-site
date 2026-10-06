@@ -1,5 +1,16 @@
 // Frequently asked questions, in the order they appear on the FAQ page.
 // Answers are plain text. Wording is taken from the original site.
+// The rates answer is built from the prices in site.ts, so it always matches the rest of the site.
+import { hourlyRate, packages, packagePrice, payments, gbp } from './site';
+
+const packOffers = new Intl.ListFormat('en-GB', { type: 'disjunction' }).format(
+  packages
+    .filter((p) => p.hours > 1)
+    .map((p) => `${p.hours} hours for ${gbp(packagePrice(p).total, { pence: true })} (${Math.round(p.discount * 100)}% off)`),
+);
+const payLater = payments.payLater
+  ? ' Buy now, pay later options are available at checkout and may vary based on your location.'
+  : '';
 
 export const faq = [
   {
@@ -12,7 +23,7 @@ export const faq = [
   },
   {
     q: 'What are your rates?',
-    a: 'Lessons are £25 per hour. You can save by buying a package: 5 hours for £118.75 (5% off) or 10 hours for £225.00 (10% off). Buy now, pay later options are available at checkout and may vary based on your location.',
+    a: `Lessons are ${gbp(hourlyRate)} per hour. You can save by buying a package: ${packOffers}.${payLater}`,
   },
   {
     q: 'How do I get a consultation?',

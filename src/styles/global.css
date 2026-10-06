@@ -64,7 +64,7 @@ strong, b { color: var(--white); font-weight: 700; }
 .sec + .sec { padding-top: 0; }
 .sec-head { display: grid; gap: 10px; max-width: 720px; margin-bottom: clamp(28px, 4vw, 44px); }
 .sec-head h1, .sec-head h2 { font-size: clamp(2rem, 5.2vw, 3.4rem); }
-.sec-head p:not(.kick) { color: var(--muted); font-size: 1.05rem; }
+.sec-head p:not(.kick) { color: var(--muted); font-size: 1.05rem; text-wrap: pretty; }
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .skip { position: absolute; left: 16px; top: -100px; z-index: 10; background: var(--yellow); color: var(--ink); font-weight: 700; padding: 10px 16px; border-radius: 10px; }
 .skip:focus { top: 16px; }
@@ -96,7 +96,7 @@ strong, b { color: var(--white); font-weight: 700; }
 .btn--block { display: flex; width: 100%; }
 
 /* Pills */
-.pill { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.35em 0.8em; border-radius: 99px; border: 1px solid #E6B9008C; color: var(--yellow); white-space: nowrap; }
+.pill { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.35em 0.8em; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--yellow) 55%, transparent); color: var(--yellow); white-space: nowrap; }
 .pill--solid { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
 
 /* Cards */

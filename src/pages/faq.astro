@@ -1,0 +1,148 @@
+---
+// FAQ page: every question from src/data/faq.ts, the free consult, and a short "pick your path" to finish.
+// The FAQPage structured data is built from the same list, so the page and the schema never drift apart.
+import Base from '../layouts/Base.astro';
+import FaqList from '../components/FaqList.astro';
+import ConsultCard from '../components/ConsultCard.astro';
+import { faq } from '../data/faq';
+import { site, workshop, nextWorkshop, hourlyRate, services, daws, gbp, bookingHref } from '../data/site';
+import { cheapest, listJoin } from '../components/home/pricing';
+
+const pageUrl = `${site.url}/faq/`;
+const serviceLine = listJoin(services.map((s, i) => (i === 0 ? s : s.toLowerCase())));
+
+const next = nextWorkshop();
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  '@id': `${pageUrl}#faq`,
+  url: pageUrl,
+  name: `${site.name} FAQ`,
+  inLanguage: 'en-GB',
+  isPartOf: { '@type': 'WebSite', '@id': `${site.url}/#website`, url: `${site.url}/`, name: site.name },
+  mainEntity: faq.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+};
+
+const description = `Common questions about one-to-one bass music production lessons with ${site.tutor.alias}: what is covered, prices and packs, DAWs, and the free 30-minute consult.`;
+---
+<Base title="FAQ: lessons, prices and booking" description={description} jsonLd={jsonLd}>
+  <section class="hero" aria-labelledby="faq-title">
+    <div class="wrap">
+      <p class="kick">FAQ</p>
+      <h1 id="faq-title">Questions before you book</h1>
+      <p class="lede">
+        What you get, what it costs and how booking works. Still not sure?
+        Book a free 30-minute consult and ask {site.tutor.name} yourself.
+      </p>
+    </div>
+  </section>
+
+  <section class="sec wrap faqwrap" aria-label="Questions and answers">
+    <div class="faq">
+      <p class="count">{faq.length} questions</p>
+      <FaqList />
+    </div>
+    <div class="cc">
+      <ConsultCard heading="Still have a question?" />
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="next-title">
+    <h2 id="next-title" class="pick-t">Ready when you are</h2>
+    <div class="paths">
+      <article class="path path--lead" aria-labelledby="path-lessons">
+        <p class="kick">1:1 Lessons</p>
+        <h3 id="path-lessons">One-to-one with {site.tutor.alias}</h3>
+        <p class="sub">Online lessons built around your music and your DAW.</p>
+        <ul class="spk">
+          <li>{serviceLine}</li>
+          <li>{daws.specialist.join(', ')} and more</li>
+        </ul>
+        <div class="cost">
+          <p class="price"><b>{gbp(hourlyRate)}</b><span>per hour</span></p>
+          <p class="note">From {gbp(cheapest.perHour)}/hr with a {cheapest.hours}-hour pack</p>
+        </div>
+        <div class="path-cta">
+          <a class="btn btn--yellow" href={bookingHref('lesson')}>Book a lesson</a>
+          <a class="go" href="/#prices">See packages</a>
+        </div>
+      </article>
+      <article class="path" aria-labelledby="path-workshops">
+        <p class="kick">Workshops · {workshop.where}</p>
+        <h3 id="path-workshops">{workshop.title}</h3>
+        <ul class="spk">
+          {workshop.points.map((point) => <li>{point}</li>)}
+        </ul>
+        <div class="cost">
+          <p class="price"><b>{gbp(workshop.price)}</b><span>per masterclass</span></p>
+          {next ? (
+            <p class="note">Next date: <time datetime={next.iso}>{next.short}</time></p>
+          ) : (
+            <>
+              <Fragment set:html="<!-- TODO: next masterclass date not set yet. Set workshop.nextDate in src/data/site.ts and this shows the date. -->" />
+              <p class="note">Next date announced soon</p>
+            </>
+          )}
+        </div>
+        <div class="path-cta">
+          <a class="btn" href={bookingHref('workshop')}>Book a workshop</a>
+          <a class="go" href="/workshops/">About the workshops</a>
+        </div>
+      </article>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* Hero: the same green glow as the other inner pages */
+  .hero { background: radial-gradient(70% 90% at 90% 0%, color-mix(in srgb, var(--green) 38%, transparent), transparent 62%); }
+  .hero > .wrap { padding-block: clamp(32px, 5vw, 64px) clamp(8px, 2vw, 16px); }
+  h1 { font-size: clamp(2.6rem, 6.6vw, 5.1rem); font-weight: 900; letter-spacing: -0.045em; line-height: 0.96; margin-top: 14px; max-width: 12em; }
+  .lede { margin-top: 20px; font-size: clamp(1rem, 1.6vw, 1.125rem); color: var(--muted); max-width: 36em; text-wrap: pretty; }
+
+  /* Questions + sticky consult card (as on the homepage) */
+  .faqwrap { display: grid; gap: 32px; padding-top: clamp(32px, 5vw, 56px); }
+  .faq { display: grid; align-content: start; }
+  .count {
+    padding-bottom: 6px; border-bottom: 1px solid var(--line);
+    color: var(--muted); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  @media (min-width: 900px) {
+    .faqwrap { grid-template-columns: 1.6fr 1fr; gap: 56px; align-items: start; }
+    .cc { position: sticky; top: 24px; }
+  }
+
+  /* Ready when you are: the two paths, compact */
+  .pick-t { margin-bottom: 18px; font-size: clamp(1.35rem, 3vw, 1.75rem); line-height: 1.1; }
+  .paths { display: grid; gap: 16px; }
+  @media (min-width: 820px) { .paths { grid-template-columns: 1fr 1fr; } }
+  .path {
+    display: flex; flex-direction: column; gap: 10px;
+    background: var(--panel); border: 1px solid var(--nav); border-radius: var(--radius); padding: clamp(20px, 3vw, 28px);
+  }
+  .path--lead { background: var(--green); border-color: var(--green); }
+  .path--lead .kick { color: var(--white); }
+  .path--lead .kick::before { color: var(--yellow); }
+  .path h3 { font-size: clamp(1.4rem, 2.6vw, 1.7rem); }
+  .sub { color: var(--muted); }
+  .path--lead .sub, .path--lead .price span { color: var(--paper); }
+  .path .spk { margin-top: 2px; }
+  .cost { display: grid; gap: 4px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
+  .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .note { color: var(--muted); font-size: 0.88rem; }
+  .path--lead .note { color: var(--paper); }
+  .price b { color: var(--white); font-size: 2.2rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+  .price span { color: var(--muted); font-size: 0.9rem; }
+  .path-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 6px; }
+  .path-cta .btn { flex: 1 1 200px; }
+  @media (min-width: 560px) { .path-cta .btn { max-width: 280px; } }
+  .go { padding-block: 4px; color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 2px; }
+  .go:hover { color: var(--white); }
+  .path--lead .go { color: var(--white); }
+  .path--lead .go:hover { text-decoration-color: var(--yellow); }
+</style>

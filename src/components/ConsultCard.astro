@@ -12,6 +12,7 @@ const { heading = 'Not sure where to start?' } = Astro.props;
 </aside>
 
 <style>
-  .consult { display: grid; gap: 14px; border-radius: 22px; padding: clamp(22px, 4vw, 34px); }
+  /* The third row takes any spare height, so the button stays at its own height, at the bottom, when a grid stretches the card. */
+  .consult { display: grid; grid-template-rows: auto auto 1fr auto; gap: 14px; border-radius: 22px; padding: clamp(22px, 4vw, 34px); }
   h2 { font-size: clamp(1.6rem, 3.4vw, 2.1rem); }
 </style>

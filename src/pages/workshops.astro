@@ -1,0 +1,322 @@
+---
+import Base from '../layouts/Base.astro';
+import Review from '../components/Review.astro';
+import VideoPoster from '../components/VideoPoster.astro';
+import ConsultCard from '../components/ConsultCard.astro';
+import { site, workshop, nextWorkshop, bookingHref, gbp, hourlyRate } from '../data/site';
+import { cheapest } from '../components/home/pricing';
+
+// Next date (null when none is set, or it had passed when the site was built).
+const next = nextWorkshop();
+
+// "Dubstep Bass Masterclass" + "with Silkie", so the second half can be highlighted.
+const titleParts = workshop.title.match(/^(.*?)\s+(with\s.+)$/i);
+
+// Two of the best-known labels for the hero line; the full list is in the tutor section.
+const heroLabels = ['Deep Medi', 'Soul Jazz'].filter((l) => site.labels.includes(l));
+
+const price = gbp(workshop.price);
+
+const instructor = { '@type': 'Person', name: site.tutor.name, alternateName: site.tutor.alias };
+const provider = { '@type': 'Organization', name: site.name, url: site.url };
+const pageUrl = `${site.url}/workshops/`;
+const description = `${workshop.title}, live on Zoom: dubstep bass for any DAW and all levels, with a Q&A after the session. ${price} per place, limited spaces.`;
+
+const jsonLd: Record<string, unknown>[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: workshop.title,
+    description: `A live online masterclass on dubstep bass, taught by ${site.tutor.name} aka ${site.tutor.alias}. Any DAW, all levels welcome, with a Q&A after the session.`,
+    url: pageUrl,
+    provider,
+    inLanguage: 'en-GB',
+    offers: { '@type': 'Offer', category: 'Paid', price: workshop.price, priceCurrency: 'GBP', url: pageUrl },
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: 'Online',
+      instructor,
+      ...(next ? { startDate: next.iso } : {}),
+    },
+  },
+];
+if (next) {
+  jsonLd.push({
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: workshop.title,
+    startDate: next.iso,
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+    location: { '@type': 'VirtualLocation', url: pageUrl },
+    organizer: provider,
+    performer: instructor,
+    offers: { '@type': 'Offer', price: workshop.price, priceCurrency: 'GBP', url: new URL(bookingHref('workshop'), site.url).href, availability: 'https://schema.org/InStock' },
+  });
+}
+---
+<Base title={`${workshop.title}, live on Zoom`} description={description} jsonLd={jsonLd}>
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="kick">Workshop · {workshop.where}</p>
+          <h1>
+            {titleParts ? <>{titleParts[1]} <span class="hl">{titleParts[2]}</span></> : workshop.title}
+          </h1>
+          <p class="lede">
+            A live online masterclass on <strong>dubstep bass</strong>, taught by {site.tutor.name} aka {site.tutor.alias}.
+            Bring whatever DAW you use, come at any level, and put your own questions to {site.tutor.alias} in the Q&amp;A afterwards.
+          </p>
+          <ul class="creds" aria-label={`About ${site.tutor.alias}`}>
+            <li>UK dubstep producer, {site.tutor.years} years</li>
+            <li>Bitwig Certified Trainer</li>
+            {heroLabels.length > 0 && <li>Releases on {heroLabels.join(' and ')}</li>}
+          </ul>
+        </div>
+
+        <aside class="card card--green ticket" aria-labelledby="ticket-h">
+          <h2 id="ticket-h" class="kick">Next masterclass</h2>
+          {next ? (
+            <p class="when"><time datetime={next.iso}>{next.long}</time></p>
+          ) : (
+            <>
+              <!-- TODO: set workshop.nextDate in src/data/site.ts when the next masterclass is scheduled; this card then shows the date and a booking button. -->
+              <p class="when">Next date announced soon</p>
+            </>
+          )}
+          <p class="price"><b>{price}</b> <span>per masterclass</span></p>
+          <ul class="spk">
+            <li>{workshop.where}</li>
+            {workshop.points.map((point) => <li>{point}</li>)}
+          </ul>
+          <div class="ticket-foot">
+            {next ? (
+              <>
+                <a class="btn btn--yellow btn--block" href={bookingHref('workshop')}>Book your place · {price}</a>
+                <p class="note">Spaces are limited, so book early.</p>
+              </>
+            ) : (
+              <>
+                <a class="btn btn--yellow btn--block" href={site.youtube} rel="noopener">Follow us on YouTube</a>
+                <p class="note">
+                  This page is updated as soon as the next date is set. Want help sooner?{' '}
+                  <a href={bookingHref('consult')}>Book a free 30-minute consult</a>.
+                </p>
+              </>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      <svg class="wave" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path class="w2" d="M0 50Q14 9 27 50Q41 98 55 50Q68-3 82 50Q95 106 109 50Q123-8 136 50Q150 107 164 50Q177-5 191 50Q205 100 218 50Q232 6 245 50Q259 87 273 50Q286 20 300 50Q314 73 327 50Q341 34 355 50Q368 61 382 50Q395 42 409 50Q423 56 436 50Q450 43 464 50Q477 59 491 50Q505 36 518 50Q532 70 545 50Q559 23 573 50Q586 84 600 50" />
+        <path d="M0 50Q15 42 30 50Q45 62 60 50Q75 30 90 50Q105 80 120 50Q135 8 150 50Q165 104 180 50Q195-16 210 50Q225 126 240 50Q255-34 270 50Q285 138 300 50Q315-38 330 50Q345 134 360 50Q375-26 390 50Q405 116 420 50Q435-4 450 50Q465 92 480 50Q495 20 510 50Q525 70 540 50Q555 38 570 50Q585 58 600 50" />
+      </svg>
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="about-h">
+    <div class="sec-head">
+      <p class="kick">The masterclass</p>
+      <h2 id="about-h">Bass for dubstep, taught live</h2>
+      <p>One session on dubstep bass, taught by {site.tutor.alias} on Zoom, with time at the end for your questions.</p>
+    </div>
+    <!-- TODO: add a short outline of the next session here once Silkie confirms what it will cover. Keep it to what he actually teaches. -->
+    <div class="cover">
+      <div class="card card--green cov">
+        <h3>What you'll cover</h3>
+        <ul class="spk">
+          <li>Dubstep bass: the focus of the whole session</li>
+          <li>Ideas you can use in any DAW, not just one</li>
+          <li>A Q&amp;A after the session to put your own questions to {site.tutor.alias}</li>
+        </ul>
+      </div>
+      <div class="card cov">
+        <h3>Who it's for</h3>
+        <ul class="spk">
+          <li>Producers who want to get better at making bass for dubstep</li>
+          <li>Any DAW: use the software you already know</li>
+          <li>All levels welcome, from first steps to seasoned producers</li>
+          <li>Anyone who wants a taste of {site.tutor.alias}'s teaching before booking 1:1 lessons</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="how-h">
+    <div class="sec-head">
+      <p class="kick">How it works</p>
+      <h2 id="how-h">Book, join, ask</h2>
+    </div>
+    <ol class="steps">
+      <li>
+        <h3>Book your place</h3>
+        <p>{price} per masterclass. Spaces are limited, so book early{next ? '.' : ' once the date is out.'}</p>
+      </li>
+      <li>
+        <h3>Join live on Zoom</h3>
+        <p>{site.tutor.alias} teaches the session live online, so you can join from wherever you make music.</p>
+      </li>
+      <li>
+        <h3>Ask your questions</h3>
+        <p>Stay on after the session for a Q&amp;A with {site.tutor.alias} and get answers to your own questions.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="watch-h">
+    <div class="sec-head">
+      <p class="kick">From a past workshop</p>
+      <h2 id="watch-h">Watch {site.tutor.alias} teach</h2>
+    </div>
+    <div class="proof">
+      <VideoPoster />
+      <Review />
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="tutor-h">
+    <div class="cred">
+      <div class="cred-who">
+        <p class="kick">Your tutor</p>
+        <h2 id="tutor-h">Taught by {site.tutor.alias}</h2>
+        <p>
+          {site.tutor.name} aka {site.tutor.alias} is a UK dubstep producer with {site.tutor.years} years behind him and a Bitwig Certified Trainer.
+          He teaches music theory, sound design, mixing and mastering across multiple DAWs, for every skill level.
+        </p>
+      </div>
+      <ul class="stats">
+        <li><b>{site.tutor.years}</b> <span>years producing dubstep</span></li>
+        <li><b>Bitwig</b> <span>Certified Trainer</span></li>
+      </ul>
+      <div class="labels">
+        <p class="kick">Released on</p>
+        <ul>{site.labels.map((label) => <li>{label}</li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="more-h">
+    <div class="more">
+      <div class="card card--green deeper">
+        <p class="pill pill--solid">1:1 Lessons</p>
+        <h2 id="more-h">Want to go deeper?</h2>
+        <p>
+          A masterclass is one session for a group. One-to-one lessons are built around you: your music, your DAW, your pace,
+          from the basics to advanced techniques.
+        </p>
+        <div class="deeper-foot">
+          <p class="price"><b>{gbp(hourlyRate)}</b> <span>per hour</span></p>
+          <p class="note">From {gbp(cheapest.perHour)}/hr with a {cheapest.hours}-hour pack</p>
+          <div class="deeper-btns">
+            <a class="btn btn--yellow" href="/#lessons">See 1:1 lessons</a>
+            <a class="btn btn--ghost" href={bookingHref('lesson')}>Book a lesson</a>
+          </div>
+        </div>
+      </div>
+      <ConsultCard heading="Not sure which is right for you?" />
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* Hero */
+  .hero { background: radial-gradient(70% 90% at 90% 0%, color-mix(in srgb, var(--green) 38%, transparent), transparent 62%); }
+  .hero > .wrap { padding-block: clamp(32px, 5vw, 64px) 0; }
+  .hero-grid { display: grid; gap: 32px; align-items: end; }
+  @media (min-width: 940px) { .hero-grid { grid-template-columns: 1.35fr 1fr; gap: 56px; } }
+
+  h1 { font-size: clamp(2.6rem, 6.6vw, 5.1rem); font-weight: 900; letter-spacing: -0.045em; line-height: 0.96; margin-top: 14px; }
+  .hl { color: var(--yellow); }
+  .lede { margin-top: 22px; font-size: clamp(1rem, 1.6vw, 1.125rem); color: var(--muted); max-width: 34em; }
+  .creds { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 22px; color: var(--white); font-size: 0.9rem; font-weight: 600; }
+  .creds li { display: flex; }
+  .creds li::before { content: "\2726"; content: "\2726" / ""; color: var(--yellow); margin-right: 0.5em; }
+
+  /* Next-date ticket (green card). Small text on green stays white for contrast. */
+  .ticket { display: grid; gap: 16px; border-radius: 22px; padding: clamp(22px, 3.4vw, 32px); }
+  .ticket .kick { color: var(--white); line-height: 1.6; }
+  .ticket .kick::before { color: var(--yellow); }
+  .when { color: var(--white); font-weight: 800; font-size: clamp(1.55rem, 3vw, 2rem); letter-spacing: -0.03em; line-height: 1.1; text-wrap: balance; }
+  .ticket .price { padding-top: 16px; border-top: 1px solid var(--line); }
+  .ticket .spk { color: var(--paper); }
+  .ticket-foot { display: grid; gap: 12px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .ticket-foot .btn { padding-inline: 0.8em; }
+  .note { color: var(--paper); font-size: 0.88rem; }
+  .note a { color: var(--white); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+  .note a:hover { text-decoration-thickness: 2px; }
+
+  .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .price b { color: var(--white); font-size: 2.4rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+  .price span { color: var(--paper); font-size: 0.9rem; }
+
+  /* Brand wave divider */
+  .wave { display: block; width: 100%; height: clamp(40px, 6vw, 76px); margin-block: clamp(28px, 4vw, 48px) 0; overflow: visible; }
+  .wave path { fill: none; stroke: var(--yellow); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+  .wave .w2 { stroke: var(--green); stroke-width: 3; }
+
+  /* What you'll cover / who it's for */
+  .cover { display: grid; gap: 16px; }
+  @media (min-width: 780px) { .cover { grid-template-columns: 1fr 1fr; } }
+  .cov { display: grid; gap: 16px; align-content: start; border-radius: var(--radius); }
+  .cov h3 { font-size: clamp(1.3rem, 2.4vw, 1.55rem); }
+  .cov .spk { font-size: 1rem; gap: 12px; }
+  .cov .spk li { line-height: 1.5; }
+  .card--green .spk { color: var(--paper); }
+
+  /* Steps */
+  .steps { counter-reset: s; display: grid; gap: 30px; }
+  .steps li { counter-increment: s; position: relative; padding-left: 66px; }
+  .steps li::before {
+    content: counter(s); content: counter(s) / ""; position: absolute; left: 0; top: 0; display: grid; place-items: center;
+    width: 46px; height: 46px; border-radius: 50%; background: var(--yellow); color: var(--ink); font-weight: 900; font-size: 1.2rem;
+  }
+  .steps li:first-child::before { background: var(--green); color: var(--white); box-shadow: 0 0 0 2px var(--yellow); }
+  .steps li:not(:last-child)::after {
+    content: ""; position: absolute; left: 22px; top: 56px; bottom: -24px; width: 2px;
+    background: linear-gradient(var(--yellow), color-mix(in srgb, var(--yellow) 12%, transparent));
+  }
+  .steps h3 { font-size: 1.3rem; margin: 8px 0 6px; }
+  .steps p { color: var(--muted); }
+  @media (min-width: 780px) {
+    .steps { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+    .steps li { padding: 68px 12px 0 0; }
+    .steps li:not(:last-child)::after {
+      left: 58px; right: -16px; top: 22px; bottom: auto; width: auto; height: 2px;
+      background: linear-gradient(90deg, var(--yellow), color-mix(in srgb, var(--yellow) 12%, transparent));
+    }
+  }
+
+  /* Video + review */
+  .proof { display: grid; gap: 16px; }
+  @media (min-width: 880px) { .proof { grid-template-columns: 1.55fr 1fr; } }
+
+  /* Tutor */
+  .cred { display: grid; gap: 28px; background: var(--panel); border: 1px solid var(--nav); border-radius: 24px; padding: clamp(22px, 4.5vw, 48px); }
+  .cred-who { display: grid; gap: 12px; align-content: start; }
+  .cred-who h2 { font-size: clamp(2rem, 5.2vw, 3.4rem); }
+  .cred-who p:not(.kick) { color: var(--muted); max-width: 36em; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-self: end; }
+  .stats li { display: grid; align-content: space-between; gap: 2px; min-height: 118px; padding: 16px; border-radius: 14px; background: var(--yellow); color: var(--ink); }
+  .stats b { color: var(--ink); font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+  .stats span { font-size: 0.86rem; font-weight: 600; line-height: 1.3; }
+  .labels { grid-column: 1 / -1; display: grid; gap: 10px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .labels ul { display: flex; flex-wrap: wrap; gap: 4px 0; }
+  .labels li { margin-right: 1em; color: var(--white); font-weight: 800; font-size: clamp(1.1rem, 2.8vw, 1.8rem); letter-spacing: -0.02em; text-transform: uppercase; line-height: 1.25; }
+  .labels li::before { content: "\2726"; content: "\2726" / ""; color: var(--yellow); font-size: 0.6em; margin-right: 0.6em; vertical-align: 0.25em; }
+  @media (min-width: 820px) { .cred { grid-template-columns: 1.25fr 1fr; column-gap: 48px; } }
+
+  /* Go deeper: 1:1 lessons + free consult */
+  .more { display: grid; gap: 16px; }
+  @media (min-width: 900px) { .more { grid-template-columns: 1.25fr 1fr; align-items: stretch; } }
+  .deeper { display: flex; flex-direction: column; gap: 14px; border-radius: 22px; padding: clamp(22px, 4vw, 34px); }
+  .deeper .pill { align-self: flex-start; }
+  .deeper h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+  .deeper > p { color: var(--paper); max-width: 36em; }
+  .deeper-foot { display: grid; gap: 4px; margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line); }
+  .deeper-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .deeper-btns .btn { flex: 1 1 180px; }
+  .deeper .btn--ghost { border-color: var(--paper); }
+  .deeper .btn--ghost:hover { border-color: var(--yellow); }
+</style>

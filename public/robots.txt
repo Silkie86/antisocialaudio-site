@@ -1,0 +1,8 @@
+# robots.txt for antisocialaudio.co.uk
+# Search engines may visit every page. The list of pages is in the sitemap below.
+# /api/ is the DJ enquiry form's address: it only accepts form posts, so there is nothing to index.
+
+User-agent: *
+Disallow: /api/
+
+Sitemap: https://antisocialaudio.co.uk/sitemap-index.xml

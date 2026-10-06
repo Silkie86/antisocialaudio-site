@@ -28,6 +28,7 @@ export const footerNav = [
 
 // Booking links. Set each to its Cal.com (or Stripe Payment Link) URL once those accounts exist.
 // While a value is null, buttons go to the /book/ page, which explains what to do in the meantime.
+// Set them all before antisocialaudio.co.uk is pointed at this site: until then the option cannot be booked online.
 export const booking: Record<'consult' | 'lesson' | 'pack5' | 'pack10' | 'workshop', string | null> = {
   consult: null,
   lesson: null,
@@ -36,8 +37,12 @@ export const booking: Record<'consult' | 'lesson' | 'pack5' | 'pack10' | 'worksh
   workshop: null,
 };
 
-// Where people can book until the new booking pages are live (the current Amelia page).
-export const legacyBookingUrl = 'https://antisocialaudio.co.uk/music-productibook-now/';
+// Where people can book an option whose link above is still null: the old WordPress booking page (Amelia).
+// Leave it null unless the old site is kept running at a different address, e.g.
+// 'https://old.antisocialaudio.co.uk/music-productibook-now/'. The old address on antisocialaudio.co.uk
+// (/music-productibook-now/) redirects to /book/ once the domain points at this site, so /book/ ignores
+// any link on this site's own domain rather than send people round in a circle.
+export const legacyBookingUrl: string | null = null;
 
 export function bookingHref(key: keyof typeof booking): string {
   return booking[key] ?? `/book/#${key}`;
@@ -83,6 +88,33 @@ export const workshop = {
   points: ['Any DAW, all levels welcome', 'Q&A with Silkie after the session', 'Limited spaces'],
   // Set to an ISO date (e.g. '2026-11-16') when the next masterclass is scheduled.
   nextDate: null as string | null,
+};
+
+/**
+ * The next workshop date, ready to show, or null when none is set or it has already passed.
+ * The site is built ahead of time, so "already passed" means at the last build: after a workshop,
+ * set the next date (or null) and the site rebuilds.
+ */
+export function nextWorkshop(): { iso: string; long: string; short: string } | null {
+  const iso = workshop.nextDate;
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+  const date = new Date(`${iso}T12:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== iso) return null;
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  if (date < today) return null;
+  const format = (weekday: 'long' | 'short') =>
+    new Intl.DateTimeFormat('en-GB', { weekday, day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
+  return { iso, long: format('long'), short: format('short') };
+}
+
+// How people can pay at checkout. Each mention on the site (the FAQ, the home page, /book/) follows these,
+// so if one isn't offered when Cal.com, Stripe and PayPal are set up, set it to false here.
+// TODO: confirm all three once checkout is live; buy now, pay later was offered on the old WordPress shop.
+export const payments = {
+  card: true,
+  paypal: true,
+  payLater: true,
 };
 
 export const review = {

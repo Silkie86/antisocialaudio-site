@@ -1,0 +1,384 @@
+---
+// DJ booking enquiry form. It posts to /api/enquiry (functions/api/enquiry.js, run by the site's Cloudflare Worker),
+// which emails the enquiry to the owner. Setup: docs/enquiry-form.md
+//
+// Without JavaScript it is a plain form post: the endpoint redirects back to #enquiry-sent or #enquiry-error,
+// and CSS (:target) shows the matching message. With JavaScript it sends in place and shows the result inline.
+// Spam protection: a hidden honeypot field, plus Cloudflare Turnstile when PUBLIC_TURNSTILE_SITE_KEY is set at build time.
+// Field names, limits and messages match the endpoint; change both together.
+
+const siteKey: string = (import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '').trim();
+
+type Field = {
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'date' | 'textarea';
+  required: boolean;
+  /** Message shown when the field is missing or not valid. */
+  msg: string;
+  max?: number;
+  hint?: string;
+  autocomplete?: string;
+  half?: boolean;
+  pattern?: string;
+};
+
+const fields: Field[] = [
+  { name: 'name', label: 'Your name', type: 'text', required: true, max: 100, autocomplete: 'name', half: true, msg: 'Please enter your name.' },
+  {
+    name: 'email',
+    label: 'Email',
+    type: 'email',
+    required: true,
+    max: 254,
+    autocomplete: 'email',
+    half: true,
+    // Same rule as the endpoint: something@something.something
+    pattern: '[^@\\s]+@[^@\\s]+\\.[^@\\s]+',
+    msg: 'Please enter a valid email address, like name@example.com.',
+  },
+  { name: 'event', label: 'Event name', type: 'text', required: true, max: 150, autocomplete: 'off', msg: 'Please enter the name of the event.' },
+  {
+    name: 'date',
+    label: 'Date',
+    type: 'date',
+    required: false,
+    half: true,
+    hint: 'Leave blank if it is not fixed yet.',
+    msg: 'Please choose a date that has not passed yet, or leave it blank.',
+  },
+  {
+    name: 'location',
+    label: 'Location / venue',
+    type: 'text',
+    required: true,
+    max: 200,
+    autocomplete: 'off',
+    half: true,
+    hint: 'Venue, and town or city.',
+    msg: 'Please tell us where the event is.',
+  },
+  {
+    name: 'message',
+    label: 'Message',
+    type: 'textarea',
+    required: true,
+    max: 5000,
+    hint: 'Set time and length, line-up, budget: whatever you know so far.',
+    msg: 'Please tell us a little about the event.',
+  },
+];
+
+const id = (name: string) => `enq-${name}`;
+const describedBy = (f: Field) => [f.hint && `${id(f.name)}-hint`, `${id(f.name)}-err`].filter(Boolean).join(' ');
+---
+<div class="enquiry" id="enquiry-form" data-enquiry>
+  <div class="sent" id="enquiry-sent" tabindex="-1" data-sent>
+    <p class="kick">Enquiry sent</p>
+    <h3>Thanks, we have your enquiry</h3>
+    <p>We'll reply to the email address you gave us.</p>
+    <a class="again" href="#enquiry-form" data-again>Send another enquiry</a>
+  </div>
+
+  <form class="form" action="/api/enquiry" method="post" data-form>
+    <p class="req">All fields are required unless marked optional.</p>
+
+    <div class="fields">
+      {fields.map((f) => (
+        <div class:list={['field', { full: !f.half }]}>
+          <label for={id(f.name)}>
+            {f.label}
+            {!f.required && <span class="opt"> (optional)</span>}
+          </label>
+          {f.hint && <p class="hint" id={`${id(f.name)}-hint`}>{f.hint}</p>}
+          {f.type === 'textarea' ? (
+            <textarea
+              id={id(f.name)}
+              name={f.name}
+              rows="6"
+              required={f.required}
+              maxlength={f.max}
+              aria-describedby={describedBy(f)}
+              data-field
+              data-msg={f.msg}
+            />
+          ) : (
+            <input
+              id={id(f.name)}
+              name={f.name}
+              type={f.type}
+              required={f.required}
+              maxlength={f.max}
+              autocomplete={f.autocomplete}
+              pattern={f.pattern}
+              spellcheck={f.type === 'email' ? 'false' : undefined}
+              aria-describedby={describedBy(f)}
+              data-field
+              data-msg={f.msg}
+            />
+          )}
+          <p class="err" id={`${id(f.name)}-err`} hidden></p>
+        </div>
+      ))}
+    </div>
+
+    <!-- Honeypot: hidden from people and screen readers. Bots that fill it in are quietly ignored by the endpoint. -->
+    <div class="hp" aria-hidden="true">
+      <label for="enq-website">Leave this field empty</label>
+      <input id="enq-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+
+    {siteKey ? (
+      <>
+        <div class="cf-turnstile ts" data-sitekey={siteKey} data-theme="dark" data-size="flexible" data-action="dj-enquiry"></div>
+        <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+      </>
+    ) : (
+      <Fragment set:html="<!-- TODO: Cloudflare Turnstile is off because PUBLIC_TURNSTILE_SITE_KEY was not set when the site was built. Add it as a build variable (see docs/enquiry-form.md) and rebuild; the spam check then appears here. -->" />
+    )}
+
+    <div class="alert" id="enquiry-error" role="alert" tabindex="-1" data-alert>
+      <p class="alert-t">Sorry, your enquiry was not sent.</p>
+      <p data-alert-msg>
+        {siteKey
+          ? 'Please fill in the form and send it again. Our spam check needs JavaScript, so make sure it is switched on.'
+          : 'Please check the form and send it again, or try again in a few minutes.'}
+      </p>
+    </div>
+
+    <div class="foot">
+      <button class="btn btn--yellow" type="submit" data-submit><span data-label>Send enquiry</span></button>
+      <p class="small">We'll use these details to reply to your enquiry. <a href="/privacy/">Privacy notice</a></p>
+    </div>
+    <p class="visually-hidden" role="status" data-live></p>
+  </form>
+</div>
+
+<script>
+  type Control = HTMLInputElement | HTMLTextAreaElement;
+  type Reply = { ok?: boolean; error?: string; fields?: Record<string, string> };
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  document.querySelectorAll<HTMLElement>('[data-enquiry]').forEach((root) => {
+    const form = root.querySelector<HTMLFormElement>('[data-form]')!;
+    const sent = root.querySelector<HTMLElement>('[data-sent]')!;
+    const alertBox = root.querySelector<HTMLElement>('[data-alert]')!;
+    const alertMsg = root.querySelector<HTMLElement>('[data-alert-msg]')!;
+    const submit = root.querySelector<HTMLButtonElement>('[data-submit]')!;
+    const submitLabel = submit.querySelector<HTMLElement>('[data-label]')!;
+    const live = root.querySelector<HTMLElement>('[data-live]')!;
+    const widget = root.querySelector<HTMLElement>('.cf-turnstile');
+    const controls = Array.from(form.querySelectorAll<Control>('[data-field]'));
+    let busy = false;
+
+    // From here on this script checks the fields itself, with messages next to each one.
+    form.noValidate = true;
+
+    // No dates in the past (the visitor's own today).
+    const date = form.querySelector<HTMLInputElement>('input[type="date"]');
+    if (date) {
+      const t = new Date();
+      date.min = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+    }
+
+    const problem = (el: Control) => {
+      if (el.required && !el.value.trim()) return el.dataset.msg ?? '';
+      if (el.validity.tooLong) return `Please keep this under ${el.maxLength.toLocaleString('en-GB')} characters.`;
+      return el.validity.valid ? '' : (el.dataset.msg ?? el.validationMessage);
+    };
+
+    const showFieldError = (el: Control, msg: string) => {
+      const err = document.getElementById(`${el.id}-err`);
+      if (err) {
+        err.textContent = msg;
+        err.hidden = !msg;
+      }
+      if (msg) el.setAttribute('aria-invalid', 'true');
+      else el.removeAttribute('aria-invalid');
+    };
+
+    const hideAlert = () => alertBox.classList.remove('is-shown');
+    const showAlert = (msg: string) => {
+      alertMsg.textContent = '';
+      alertBox.classList.add('is-shown');
+      // Change the text after the box is shown so screen readers announce it.
+      requestAnimationFrame(() => {
+        alertMsg.textContent = msg;
+      });
+    };
+
+    const setBusy = (on: boolean) => {
+      busy = on;
+      submit.setAttribute('aria-disabled', String(on));
+      form.setAttribute('aria-busy', String(on));
+      submitLabel.textContent = on ? 'Sending…' : 'Send enquiry';
+      live.textContent = on ? 'Sending your enquiry…' : '';
+    };
+
+    const resetTurnstile = () => {
+      const ts = (window as unknown as { turnstile?: { reset: (w: HTMLElement) => void } }).turnstile;
+      if (!widget || !ts) return;
+      try {
+        ts.reset(widget);
+      } catch {
+        // The widget will refresh itself when its token expires.
+      }
+    };
+
+    // Once a field has been flagged, re-check it as the visitor fixes it.
+    controls.forEach((el) =>
+      el.addEventListener('input', () => {
+        if (el.hasAttribute('aria-invalid')) showFieldError(el, problem(el));
+      }),
+    );
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (busy) return;
+      hideAlert();
+
+      let firstBad: Control | null = null;
+      for (const el of controls) {
+        const msg = problem(el);
+        showFieldError(el, msg);
+        if (msg && !firstBad) firstBad = el;
+      }
+      if (firstBad) {
+        firstBad.focus();
+        return;
+      }
+
+      const token = form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]');
+      if (widget && !token?.value) {
+        showAlert('The spam check has not finished yet. Please wait a moment, then send again.');
+        return;
+      }
+
+      setBusy(true);
+      try {
+        const body = new URLSearchParams();
+        new FormData(form).forEach((value, key) => {
+          if (typeof value === 'string') body.append(key, value);
+        });
+        const res = await fetch(form.action, { method: 'POST', body, headers: { Accept: 'application/json' } });
+        const reply: Reply | null = await res.json().catch(() => null);
+
+        if (res.ok && reply?.ok) {
+          form.reset();
+          controls.forEach((el) => showFieldError(el, ''));
+          root.classList.add('is-sent');
+          sent.focus();
+          return;
+        }
+
+        let firstServerBad: Control | null = null;
+        for (const [name, msg] of Object.entries(reply?.fields ?? {})) {
+          const el = controls.find((c) => c.name === name);
+          if (!el) continue;
+          showFieldError(el, msg);
+          firstServerBad ??= el;
+        }
+        if (firstServerBad) firstServerBad.focus();
+        else showAlert(reply?.error ?? 'Something went wrong. Please try again in a few minutes.');
+      } catch {
+        showAlert('We could not reach the server. Please check your connection and try again.');
+      } finally {
+        setBusy(false);
+        resetTurnstile();
+      }
+    });
+
+    // "Send another enquiry": show the empty form again.
+    root.querySelector('[data-again]')?.addEventListener('click', () => {
+      root.classList.remove('is-sent');
+      setTimeout(() => controls[0]?.focus(), 0);
+    });
+  });
+</script>
+
+<style>
+  /* Narrow screens: the form sits straight on the page, so Turnstile's 300px widget always fits.
+     From 560px it becomes a card. */
+  .enquiry { container-type: inline-size; min-width: 0; }
+  @media (min-width: 560px) {
+    .enquiry { background: var(--panel); border: 1px solid var(--nav); border-radius: var(--radius); padding: clamp(22px, 3.4vw, 36px); }
+  }
+
+  .form { display: grid; gap: 22px; }
+  .req { color: var(--muted); font-size: 0.88rem; }
+
+  .fields { display: grid; gap: 20px; }
+  @container (min-width: 520px) {
+    .fields { grid-template-columns: 1fr 1fr; column-gap: 16px; }
+    .full { grid-column: 1 / -1; }
+  }
+  .field { display: grid; gap: 6px; align-content: start; min-width: 0; }
+  /* Side-by-side fields with hints: the hint row takes up any difference, so both inputs line up. */
+  .field:has(.hint) { grid-template-rows: auto 1fr auto; align-content: stretch; }
+  .field label { color: var(--white); font-weight: 600; font-size: 0.95rem; line-height: 1.35; }
+  .opt { color: var(--muted); font-weight: 400; }
+  .hint { color: var(--muted); font-size: 0.86rem; line-height: 1.45; }
+
+  .field :is(input, textarea) {
+    width: 100%; min-height: 50px; margin: 0; padding: 0.7em 0.9em;
+    background: var(--panel-2); color: var(--white);
+    border: 1px solid color-mix(in srgb, var(--paper) 42%, transparent); border-radius: 10px;
+    font: inherit; font-size: 1rem; line-height: 1.4;
+    transition: border-color 0.15s;
+  }
+  .field textarea { min-height: 168px; resize: vertical; }
+  .field :is(input, textarea):hover { border-color: var(--muted); }
+  .field :is(input, textarea):focus { border-color: var(--yellow); }
+  .field :is(input, textarea)[aria-invalid='true'] { border: 2px solid var(--yellow); padding: calc(0.7em - 1px) calc(0.9em - 1px); }
+  .field input[type='date'] { appearance: none; -webkit-appearance: none; min-height: 50px; }
+  .field input[type='date']::-webkit-date-and-time-value { text-align: left; }
+  /* Chrome's calendar button inside the date field takes keyboard focus but shows no ring of its own,
+     so ring the whole field while anything inside it has focus. */
+  .field input[type='date']:focus-within { border-color: var(--yellow); outline: 3px solid var(--yellow); outline-offset: 3px; }
+
+  .err { display: flex; gap: 0.5em; color: var(--yellow); font-weight: 600; font-size: 0.88rem; line-height: 1.4; }
+  .err[hidden] { display: none; }
+  .err::before {
+    content: "!"; content: "!" / ""; flex: none; display: grid; place-items: center; width: 1.3em; height: 1.3em; margin-top: 0.05em;
+    border-radius: 50%; background: var(--yellow); color: var(--ink); font-weight: 800; font-size: 0.85em; line-height: 1;
+  }
+
+  /* Honeypot: off-screen, never focused. */
+  .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+  .ts { min-height: 65px; }
+
+  /* Form-level error: same yellow "!" language as the field errors, so it never competes with the button. */
+  .alert {
+    display: none; grid-template-columns: auto 1fr; gap: 2px 12px; padding: 14px 18px;
+    border: 2px solid var(--yellow); border-radius: 12px; background: var(--panel-2); color: var(--paper); font-size: 0.94rem;
+  }
+  .alert::before {
+    content: "!"; content: "!" / ""; grid-row: span 2; display: grid; place-items: center; width: 1.6em; height: 1.6em; margin-top: 0.05em;
+    border-radius: 50%; background: var(--yellow); color: var(--ink); font-weight: 800; line-height: 1;
+  }
+  .alert:target, .alert.is-shown { display: grid; }
+  /* The message boxes take focus only so screen readers announce them; they are not controls, so no focus ring. */
+  .alert:focus, .sent:focus { outline: none; }
+  .alert-t { color: var(--white); font-weight: 700; }
+
+  .foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .foot .btn { flex: 1 1 100%; }
+  @container (min-width: 520px) { .foot .btn { flex: 0 1 300px; } }
+  .foot .btn[aria-disabled='true'] { cursor: progress; opacity: 0.85; transform: none; }
+  .small { flex: 1 1 200px; color: var(--muted); font-size: 0.86rem; }
+  .small a { color: var(--paper); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+  .small a:hover { color: var(--yellow); }
+
+  /* Success message: shown after a send, or when a plain form post lands on #enquiry-sent. */
+  .sent { display: none; gap: 12px; padding: clamp(22px, 4vw, 34px); border-radius: 16px; background: var(--green); }
+  .sent:target, .is-sent .sent { display: grid; }
+  .enquiry:has(.sent:target) .form, .is-sent .form { display: none; }
+  .sent .kick { color: var(--white); }
+  .sent .kick::before { color: var(--yellow); }
+  .sent h3 { font-size: clamp(1.5rem, 3vw, 2rem); }
+  .sent p:not(.kick) { color: var(--paper); }
+  .again { justify-self: start; padding-block: 4px; color: var(--white); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+  .again:hover { text-decoration-color: var(--yellow); }
+</style>
