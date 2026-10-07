@@ -1,0 +1,42 @@
+---
+import { faq } from '../data/faq';
+
+interface Props {
+  /** Show only these questions, in this order, by their exact text in src/data/faq.ts. Shows all when omitted. */
+  only?: string[];
+}
+const { only } = Astro.props;
+// A question that is not in faq.ts (say it was reworded there) stops the build, rather than quietly disappearing.
+const items = only
+  ? only.map((q) => {
+      const item = faq.find((f) => f.q === q);
+      if (!item) throw new Error(`FaqList: "${q}" is not a question in src/data/faq.ts. Use the question's exact wording.`);
+      return item;
+    })
+  : faq;
+---
+<div class="faq-list">
+  {items.map((item) => (
+    <details>
+      <summary>{item.q}</summary>
+      <p>{item.a}</p>
+    </details>
+  ))}
+</div>
+
+<style>
+  details { border-bottom: 1px solid var(--line); }
+  summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0;
+    color: var(--white); font-weight: 600; font-size: 1.06rem; line-height: 1.35; cursor: pointer; list-style: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary:hover { color: var(--yellow); }
+  summary::after {
+    content: "+"; content: "+" / ""; flex: none; display: grid; place-items: center; width: 30px; height: 30px;
+    border-radius: 50%; border: 2px solid var(--yellow); color: var(--yellow); font-weight: 700; font-size: 1.1rem; line-height: 1;
+    transition: transform .2s;
+  }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { color: var(--muted); padding: 0 46px 20px 0; max-width: 60ch; }
+</style>

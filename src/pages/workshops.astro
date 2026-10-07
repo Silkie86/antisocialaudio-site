@@ -1,0 +1,251 @@
+---
+import Base from '../layouts/Base.astro';
+import Review from '../components/Review.astro';
+import VideoPoster from '../components/VideoPoster.astro';
+import Credentials from '../components/Credentials.astro';
+import Steps from '../components/Steps.astro';
+import Wave from '../components/Wave.astro';
+import { site, workshop, nextWorkshop, bookingHref, gbp, hourlyRate } from '../data/site';
+import { cheapest } from '../data/pricing';
+
+// Next date (null when none is set, or it had passed when the site was built).
+const next = nextWorkshop();
+
+// "Dubstep Bass Masterclass" + "with Silkie", so the second half can be highlighted.
+const titleParts = workshop.title.match(/^(.*?)\s+(with\s.+)$/i);
+
+// Two of the best-known labels for the hero line; the full list is in the tutor section.
+const heroLabels = ['Deep Medi', 'Soul Jazz'].filter((l) => site.labels.includes(l));
+
+const price = gbp(workshop.price);
+
+const steps = [
+  { title: 'Book your place', text: `${price} per masterclass. Spaces are limited, so book early${next ? '.' : ' once the date is out.'}` },
+  { title: 'Join live on Zoom', text: `${site.tutor.alias} teaches the session live online, so you can join from wherever you make music.` },
+  { title: 'Ask your questions', text: `Stay on after the session for a Q&A with ${site.tutor.alias} and get answers to your own questions.` },
+];
+
+const instructor = { '@type': 'Person', name: site.tutor.name, alternateName: site.tutor.alias };
+const provider = { '@type': 'Organization', name: site.name, url: site.url };
+const pageUrl = `${site.url}/workshops/`;
+const description = `${workshop.title}, live on Zoom: dubstep bass for any DAW and all levels, with a Q&A after the session. ${price} per place, limited spaces.`;
+
+const jsonLd: Record<string, unknown>[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: workshop.title,
+    description: `A live online masterclass on dubstep bass, taught by ${site.tutor.name} aka ${site.tutor.alias}. Any DAW, all levels welcome, with a Q&A after the session.`,
+    url: pageUrl,
+    provider,
+    inLanguage: 'en-GB',
+    offers: { '@type': 'Offer', category: 'Paid', price: workshop.price, priceCurrency: 'GBP', url: pageUrl },
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: 'Online',
+      instructor,
+      ...(next ? { startDate: next.iso } : {}),
+    },
+  },
+];
+if (next) {
+  jsonLd.push({
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: workshop.title,
+    startDate: next.iso,
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+    location: { '@type': 'VirtualLocation', url: pageUrl },
+    organizer: provider,
+    performer: instructor,
+    offers: { '@type': 'Offer', price: workshop.price, priceCurrency: 'GBP', url: new URL(bookingHref('workshop'), site.url).href, availability: 'https://schema.org/InStock' },
+  });
+}
+---
+<Base title={`${workshop.title}, live on Zoom`} description={description} jsonLd={jsonLd}>
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="kick">Workshop · {workshop.where}</p>
+          <h1>
+            {titleParts ? <>{titleParts[1]} <span class="hl">{titleParts[2]}</span></> : workshop.title}
+          </h1>
+          <p class="lede">
+            A live online masterclass on <strong>dubstep bass</strong>, taught by {site.tutor.name} aka {site.tutor.alias}.
+            Bring whatever DAW you use, come at any level, and put your own questions to {site.tutor.alias} in the Q&amp;A afterwards.
+          </p>
+          <ul class="creds" aria-label={`About ${site.tutor.alias}`}>
+            <li>UK dubstep producer, {site.tutor.years} years</li>
+            <li>Bitwig Certified Trainer</li>
+            {heroLabels.length > 0 && <li>Releases on {heroLabels.join(' and ')}</li>}
+          </ul>
+        </div>
+
+        <aside class="card card--green ticket" aria-labelledby="ticket-h">
+          <h2 id="ticket-h" class="kick">Next masterclass</h2>
+          {next ? (
+            <p class="when"><time datetime={next.iso}>{next.long}</time></p>
+          ) : (
+            <>
+              {/* TODO: set workshop.nextDate in src/data/site.ts when the next masterclass is scheduled; this card then shows the date and a booking button. */}
+              <p class="when">Next date announced soon</p>
+            </>
+          )}
+          <p class="price"><b>{price}</b> <span>per masterclass</span></p>
+          <ul class="spk">
+            <li>{workshop.where}</li>
+            {workshop.points.map((point) => <li>{point}</li>)}
+          </ul>
+          <div class="ticket-foot">
+            {next ? (
+              <>
+                <a class="btn btn--yellow btn--block" href={bookingHref('workshop')}>Book your place · {price}</a>
+                <p class="note">Spaces are limited, so book early.</p>
+              </>
+            ) : (
+              <>
+                <a class="btn btn--yellow btn--block" href={site.youtube} rel="noopener">Follow us on YouTube</a>
+                <p class="note">
+                  This page is updated as soon as the next date is set. Want help sooner?{' '}
+                  <a href={bookingHref('consult')}>Book a free 30-minute consult</a>.
+                </p>
+              </>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      <Wave class="ws-wave" />
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="about-h">
+    <div class="about">
+      <div class="sec-head">
+        <p class="kick">The masterclass</p>
+        <h2 id="about-h">Bass for dubstep, taught live</h2>
+        <p>One session on dubstep bass, taught by {site.tutor.alias} on Zoom, with time at the end for your questions.</p>
+      </div>
+      {/* TODO: add a "What you'll cover" card here, next to "Who it's for", with a short outline of the next session once Silkie confirms what it will cover. Keep it to what he actually teaches. */}
+      <div class="card cov">
+        <h3>Who it's for</h3>
+        <ul class="spk">
+          <li>Producers who want to get better at making bass for dubstep</li>
+          <li>Any DAW: use the software you already know</li>
+          <li>All levels welcome, from first steps to seasoned producers</li>
+          <li>Anyone who wants a taste of {site.tutor.alias}'s teaching before booking 1:1 lessons</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="how-h">
+    <div class="sec-head">
+      <p class="kick">How it works</p>
+      <h2 id="how-h">Book, join, ask</h2>
+    </div>
+    <Steps steps={steps} />
+  </section>
+
+  <section class="sec wrap" aria-labelledby="watch-h">
+    <div class="sec-head">
+      <p class="kick">From a past workshop</p>
+      <h2 id="watch-h">Watch {site.tutor.alias} teach</h2>
+    </div>
+    <div class="proof">
+      <VideoPoster />
+      <Review />
+    </div>
+  </section>
+
+  <Credentials class="sec" dj={false} headingId="tutor-h">
+    {site.tutor.name} aka {site.tutor.alias} is a UK dubstep producer with {site.tutor.years} years behind him and a Bitwig Certified Trainer.
+    He teaches music theory, sound design, mixing and mastering across multiple DAWs, for every skill level.
+  </Credentials>
+
+  <section class="sec wrap" aria-labelledby="more-h">
+    <div class="card card--green deeper">
+      <div class="deeper-text">
+        <p class="pill pill--solid">1:1 Lessons</p>
+        <h2 id="more-h">Want to go deeper?</h2>
+        <p>
+          A masterclass is one session for a group. One-to-one lessons are built around you: your music, your DAW, your pace,
+          from the basics to advanced techniques.
+        </p>
+      </div>
+      <div class="deeper-foot">
+        <p class="price"><b>{gbp(hourlyRate)}</b> <span>per hour</span></p>
+        <p class="note">From {gbp(cheapest.perHour)}/hr with a {cheapest.hours}-hour pack</p>
+        <div class="deeper-btns">
+          <a class="btn btn--yellow" href="/#lessons">See 1:1 lessons</a>
+          <a class="btn btn--ghost" href={bookingHref('consult')}>Book a free 30-min consult</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* Hero (.page-hero in global.css) */
+  .hero-grid { display: grid; gap: 32px; align-items: end; }
+  @media (min-width: 940px) { .hero-grid { grid-template-columns: 1.35fr 1fr; gap: 56px; } }
+
+  .hl { color: var(--yellow); }
+  .lede { margin-top: 22px; max-width: 34em; }
+  .creds { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 22px; color: var(--white); font-size: 0.9rem; font-weight: 600; }
+  .creds li { display: flex; }
+  .creds li::before { content: "\2726"; content: "\2726" / ""; color: var(--yellow); margin-right: 0.5em; }
+
+  /* Next-date ticket (green card). Small text on green stays white for contrast. */
+  .ticket { display: grid; gap: 16px; border-radius: 22px; padding: clamp(22px, 3.4vw, 32px); }
+  .ticket .kick { color: var(--white); line-height: 1.6; }
+  .ticket .kick::before { color: var(--yellow); }
+  .when { color: var(--white); font-weight: 800; font-size: clamp(1.55rem, 3vw, 2rem); letter-spacing: -0.03em; line-height: 1.1; text-wrap: balance; }
+  .ticket .price { padding-top: 16px; border-top: 1px solid var(--line); }
+  .ticket .spk { color: var(--paper); }
+  .ticket-foot { display: grid; gap: 12px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .ticket-foot .btn { padding-inline: 0.8em; }
+  .note { color: var(--paper); font-size: 0.88rem; }
+  .note a { color: var(--white); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+  .note a:hover { text-decoration-thickness: 2px; }
+
+  .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .price b { color: var(--white); font-size: 2.4rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+  .price span { color: var(--paper); font-size: 0.9rem; }
+
+  /* Brand wave divider */
+  .ws-wave { margin-block: clamp(28px, 4vw, 48px) 0; }
+
+  /* The masterclass: intro beside "Who it's for" on wide screens */
+  .about { display: grid; }
+  @media (min-width: 900px) {
+    .about { grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+    .about .sec-head { margin-bottom: 0; }
+  }
+  .cov { display: grid; gap: 16px; align-content: start; border-radius: var(--radius); }
+  .cov h3 { font-size: clamp(1.3rem, 2.4vw, 1.55rem); }
+  .cov .spk { font-size: 1rem; gap: 12px; }
+  .cov .spk li { line-height: 1.5; }
+
+  /* Video + review */
+  .proof { display: grid; gap: 16px; }
+  @media (min-width: 880px) { .proof { grid-template-columns: 1.55fr 1fr; } }
+
+  /* Go deeper: 1:1 lessons, with the free consult as the second option */
+  .deeper { display: grid; gap: 18px; border-radius: 22px; padding: clamp(22px, 4vw, 40px); }
+  .deeper-text { display: grid; gap: 14px; align-content: start; }
+  .deeper .pill { justify-self: start; }
+  .deeper h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+  .deeper-text > p:not(.pill) { color: var(--paper); max-width: 36em; }
+  .deeper-foot { display: grid; gap: 4px; align-content: end; padding-top: 18px; border-top: 1px solid var(--line); }
+  .deeper-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .deeper-btns .btn { flex: 1 1 220px; }
+  .deeper .btn--ghost { border-color: var(--paper); }
+  .deeper .btn--ghost:hover { border-color: var(--yellow); }
+  @media (min-width: 900px) {
+    .deeper { grid-template-columns: 1.3fr 1fr; column-gap: 48px; }
+    .deeper-foot { padding: 0 0 0 40px; border-top: 0; border-left: 1px solid var(--line); }
+  }
+</style>

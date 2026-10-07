@@ -1,0 +1,14 @@
+---
+// TODO: replace this temporary text wordmark with the real logo (the wavy "ANTI SOCIAL AUDIO" mark exported from
+// WordPress, ideally as an SVG). Keep the link's aria-label, so screen readers still hear "Antisocial Audio home".
+interface Props { class?: string }
+const { class: className } = Astro.props;
+---
+<a class:list={['logo', className]} href="/" aria-label="Antisocial Audio home">
+  <span>ANTISOCIAL</span><span>AUDIO</span>
+</a>
+
+<style>
+  .logo { display: inline-block; color: var(--white); font-weight: 900; font-size: 1.1rem; line-height: .94; letter-spacing: -.04em; }
+  .logo span { display: block; }
+</style>

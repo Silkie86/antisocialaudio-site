@@ -1,0 +1,317 @@
+---
+// Privacy notice (UK GDPR), written in plain English for a sole trader and for the planned setup:
+// Cal.com bookings, Stripe and PayPal payments, Zoom workshops, Cloudflare hosting, cookieless Cloudflare Web Analytics,
+// DJ enquiry emails sent via Cloudflare, and YouTube videos that load only when clicked.
+// It is a draft: see the comment at the top of the page body. Placeholders are marked with TODO comments.
+import Base from '../layouts/Base.astro';
+import { site, workshop, payments } from '../data/site';
+
+const sections = [
+  { id: 'who', label: 'Who we are' },
+  { id: 'collect', label: 'What we collect' },
+  { id: 'cookies', label: 'Cookies' },
+  { id: 'sharing', label: 'Who we share it with' },
+  { id: 'transfers', label: 'Outside the UK' },
+  { id: 'keeping', label: 'How long we keep it' },
+  { id: 'rights', label: 'Your rights' },
+  { id: 'complaints', label: 'Complaints' },
+  { id: 'changes', label: 'Changes' },
+];
+
+// Who takes payment follows `payments` in src/data/site.ts (Stripe for cards, PayPal for PayPal), as /book/ and the FAQ do.
+const payBy = [payments.card && 'Stripe', payments.paypal && 'PayPal'].filter((name): name is string => Boolean(name));
+const payDetails = [payments.card && 'card', payments.paypal && 'PayPal'].filter((name): name is string => Boolean(name));
+const and = (items: string[]) => new Intl.ListFormat('en-GB', { type: 'conjunction' }).format(items);
+const or = (items: string[]) => new Intl.ListFormat('en-GB', { type: 'disjunction' }).format(items);
+const payGive = payBy.length
+  ? `You give your ${or(payDetails)} details to ${or(payBy)}, not to us${payments.card ? ', so we never see your full card number' : ''}. `
+  : '';
+const payHandlers = [
+  payBy.length === 1 &&
+    `${payBy[0]}. It processes your payment for us, and for some things, such as preventing fraud and meeting its own legal duties, it acts as an independent controller, so its own privacy notice applies too.`,
+  payBy.length > 1 &&
+    `${and(payBy)}. They process your payment for us, and for some things, such as preventing fraud and meeting their own legal duties, they act as independent controllers, so their own privacy notices apply too.`,
+  payments.payLater && 'If you choose a buy now, pay later option at checkout, the company that provides it handles your application under its own privacy notice.',
+]
+  .filter(Boolean)
+  .join(' ');
+
+// Providers and their own privacy notices. TODO before launch: check each link still works.
+const providers = [
+  { name: 'Cal.com', role: 'Booking and scheduling', href: 'https://cal.com/privacy' },
+  { name: 'Stripe', role: 'Card payments', href: 'https://stripe.com/gb/privacy' },
+  { name: 'PayPal', role: 'PayPal payments', href: 'https://www.paypal.com/uk/legalhub/paypal/privacy-full' },
+  { name: 'Zoom', role: 'Live online workshops', href: 'https://explore.zoom.us/en/privacy/' },
+  { name: 'Cloudflare', role: 'Website hosting and security, visitor statistics, the spam check on the DJ form, and sending DJ enquiries to us by email', href: 'https://www.cloudflare.com/privacypolicy/' },
+  { name: 'Google (YouTube)', role: 'Videos, only if you choose to play one', href: 'https://policies.google.com/privacy' },
+].filter((p) => !['Stripe', 'PayPal'].includes(p.name) || payBy.includes(p.name));
+
+const rights = [
+  { t: 'See it', law: 'Access', d: 'Ask for a copy of the personal information we hold about you.' },
+  { t: 'Correct it', law: 'Rectification', d: 'Ask us to fix anything that is wrong or incomplete.' },
+  { t: 'Delete it', law: 'Erasure', d: 'Ask us to delete your information. We may have to keep some records, such as payment records, where the law says we must.' },
+  { t: 'Object', law: 'Objection', d: 'Object to us using your information where we rely on our legitimate interests.' },
+  { t: 'Pause it', law: 'Restriction', d: 'Ask us to limit how we use your information while a concern is sorted out.' },
+  { t: 'Take it with you', law: 'Portability', d: 'Ask for information you gave us in a format you can use elsewhere.' },
+];
+
+// "Live on Zoom" -> "live on Zoom" for use mid-sentence (keeps the brand name's capital).
+const whereLower = workshop.where.charAt(0).toLowerCase() + workshop.where.slice(1);
+
+const description = `How ${site.name} collects, uses and looks after your personal information when you book, pay, send a DJ enquiry or visit the site, and your rights.`;
+---
+<Base title="Privacy notice" description={description}>
+  <section class="page-hero" aria-labelledby="privacy-title">
+    {/* DRAFT: this privacy notice is a draft written for the planned setup (Cal.com, Stripe, PayPal, Zoom, Cloudflare, YouTube). Fill in every TODO, check it matches how things actually run, and ideally have it reviewed before relying on it. */}
+    <div class="wrap">
+      <p class="kick">Privacy</p>
+      <h1 id="privacy-title">Privacy notice</h1>
+      <p class="lede">
+        How we collect, use and look after your personal information when you visit this site, book or pay for a session,
+        join a lesson or workshop, or send us an enquiry, and what your rights are. In plain English.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <aside class="card short" aria-labelledby="short-title">
+      <h2 id="short-title" class="kick">The short version</h2>
+      <ul class="spk">
+        <li>We only collect what we need to book and run your sessions, take payment and reply to you.</li>
+        <li>We never sell your information or share it for advertising.</li>
+        <li>Our website statistics don't use cookies and don't track you around the web.</li>
+        <li>YouTube videos only load if you press play.</li>
+        <li>You can ask to see, correct or delete your information.</li>
+      </ul>
+    </aside>
+  </div>
+
+  <div class="sec wrap doc">
+    <nav class="toc" aria-labelledby="toc-title">
+      <p id="toc-title" class="toc-t lbl">On this page</p>
+      <ol>
+        {sections.map((s) => <li><a href={`#${s.id}`}>{s.label}</a></li>)}
+      </ol>
+    </nav>
+
+    <article class="prose">
+      <h2 id="who">Who we are</h2>
+      <p>
+        {site.name} is run by {site.tutor.name}, also known as {site.tutor.alias}, as a sole trader.
+        In this notice, “we”, “us” and “our” mean {site.tutor.name}, trading as {site.name}.
+      </p>
+      <p>
+        {site.tutor.name} is the <strong>controller</strong> of your personal information. That means he decides how it is used
+        and is responsible for looking after it under UK data protection law (the UK GDPR and the Data Protection Act 2018).
+      </p>
+      {/* TODO: confirm Antisocial Audio is run by Solomon as a sole trader. If it is a limited company, name the company as the controller above instead. */}
+      {/* TODO: replace every [contact email] on this page with the email address for privacy questions. Add a postal address too if you want one listed, and the ICO registration number if you have paid the data protection fee. */}
+      <p class="contact">
+        <span class="lbl">Privacy questions</span>
+        <span>Email <span class="ph">[contact email]</span></span>
+      </p>
+
+      <h2 id="collect">What we collect and why</h2>
+      <p>We only collect what we need. Here is what that means for each thing you might do.</p>
+
+      <section class="use" aria-labelledby="use-book">
+        <h3 id="use-book">Booking a consult, lesson or workshop</h3>
+        <dl>
+          <div><dt>What we collect</dt><dd>Your name and email address, the session and time you choose, your time zone, and anything you choose to tell us in the booking form, for example what you would like to work on.</dd></div>
+          <div><dt>Why</dt><dd>To arrange your session, send confirmations and reminders, prepare for it, and contact you about your booking.</dd></div>
+          <div><dt>Legal basis</dt><dd>Contract: we need it to provide what you have booked, or to take steps you have asked for before you book, such as the free consultation.</dd></div>
+          <div><dt>Who else handles it</dt><dd>Cal.com, our booking system, which handles it for us.</dd></div>
+        </dl>
+      </section>
+
+      <section class="use" aria-labelledby="use-pay">
+        <h3 id="use-pay">Paying for a booking</h3>
+        <dl>
+          <div><dt>What we collect</dt><dd>{payGive}We receive what we need to match your payment to your booking, such as your name, email address, what you bought, the amount, the date and whether the payment went through.</dd></div>
+          <div><dt>Why</dt><dd>To take payment, sort out any payment questions, and keep the business records the law requires.</dd></div>
+          <div><dt>Legal basis</dt><dd>Contract, and legal obligation: we must keep tax and accounting records.</dd></div>
+          <div><dt>Who else handles it</dt><dd>{payHandlers}</dd></div>
+        </dl>
+      </section>
+
+      <section class="use" aria-labelledby="use-join">
+        <h3 id="use-join">Joining a lesson or workshop</h3>
+        <dl>
+          <div><dt>What is involved</dt><dd>Lessons and workshops take place online by video call. Workshops run {whereLower}, which handles what is needed to run the call, such as the name you join with and your video, audio and chat messages.</dd></div>
+          <div><dt>Why</dt><dd>To teach the session you booked.</dd></div>
+          <div><dt>Legal basis</dt><dd>Contract.</dd></div>
+          <div><dt>Who else handles it</dt><dd>Zoom, for workshops.</dd></div>
+        </dl>
+        {/* TODO: name the video-call app used for 1:1 lessons (if it is not Zoom), and say whether any lessons or workshops are recorded. If they are, explain who gets the recording and how long it is kept. */}
+      </section>
+
+      <section class="use" aria-labelledby="use-msg">
+        <h3 id="use-msg">Sending a DJ enquiry or emailing us</h3>
+        <dl>
+          <div><dt>What we collect</dt><dd>What you enter in the <a href="/dj-bookings/#enquiry">DJ booking form</a>: your name, email address, the event name, date (if you give one), location or venue, and your message. Or whatever you include in an email to us.</dd></div>
+          <div><dt>Why</dt><dd>To reply to you and, if it goes ahead, arrange the booking.</dd></div>
+          <div><dt>Legal basis</dt><dd>Legitimate interests: replying to a message you chose to send us. If a booking follows, contract.</dd></div>
+          <div><dt>Who else handles it</dt><dd>The form sends your enquiry to us by email using Cloudflare. The website itself doesn't keep a copy. If the form shows a spam check, that is Cloudflare Turnstile, which looks at technical signals from your browser to tell people from bots. Our email provider then stores your enquiry like any other email.</dd></div>
+        </dl>
+        {/* TODO: name the email provider that receives enquiries (and add it to the list under "Who we share it with"). */}
+      </section>
+
+      <section class="use" aria-labelledby="use-visit">
+        <h3 id="use-visit">Visiting this website</h3>
+        <dl>
+          <div><dt>What is involved</dt><dd>The site is hosted on Cloudflare. Like any web host, Cloudflare processes technical information such as your IP address and browser details to deliver pages and protect the site from attacks and abuse. We also use Cloudflare Web Analytics to count visits. It doesn't use cookies or store anything on your device, and it doesn't build a profile of you. We only see totals, such as page views, which sites sent visitors here, browser types and countries.</dd></div>
+          <div><dt>Why</dt><dd>To keep the site running and secure, and to see which pages are useful.</dd></div>
+          <div><dt>Legal basis</dt><dd>Legitimate interests.</dd></div>
+          <div><dt>Who else handles it</dt><dd>Cloudflare. Our fonts are stored on this site, so loading a page doesn't send your details to a font service.</dd></div>
+        </dl>
+      </section>
+
+      <section class="use" aria-labelledby="use-video">
+        <h3 id="use-video">Playing a video</h3>
+        <dl>
+          <div><dt>What is involved</dt><dd>Videos on this site don't load anything from YouTube until you press play. When you do, the video loads from YouTube in its privacy-enhanced mode, and YouTube may collect information such as your IP address and set cookies or similar technologies on your device. Links to our YouTube channel open on YouTube itself.</dd></div>
+          <div><dt>Who else handles it</dt><dd>Google, which owns YouTube, under its own privacy policy.</dd></div>
+        </dl>
+      </section>
+
+      <h2 id="cookies">Cookies</h2>
+      <p>This site doesn't use cookies for statistics or advertising, so there is no cookie banner. A few things can still put cookies on your device:</p>
+      <ul>
+        <li>Cloudflare may set a strictly necessary security cookie, for example if your browser is asked to complete a security check.</li>
+        <li>YouTube, but only after you choose to play a video.</li>
+        <li>{and(['Cal.com', ...payBy])}, when you use them to book or pay, under their own cookie policies.</li>
+      </ul>
+
+      <h2 id="sharing">Who we share it with</h2>
+      <p>We only share your information with the services we use to run {site.name}, and only what each one needs to do its job.</p>
+      {/* TODO: add the email provider (and an accountant or bookkeeper, if you use one) to this list. */}
+      <ul class="providers">
+        {providers.map((p) => (
+          <li>
+            <span class="p-name">{p.name}</span>
+            <span class="p-role">{p.role}</span>
+            <a href={p.href} rel="noopener">Privacy notice<span class="visually-hidden"> for {p.name}</span></a>
+          </li>
+        ))}
+      </ul>
+      <p>We may also share information if the law requires it, for example with HMRC.</p>
+      <p><strong>We never sell your personal information</strong>, and we don't share it with anyone for advertising.</p>
+
+      <h2 id="transfers">Transfers outside the UK</h2>
+      <p>
+        Some of these providers are based in, or use servers in, other countries, including the USA.
+        When your information leaves the UK, it is protected by safeguards that UK law accepts, such as UK adequacy regulations
+        (including the UK-US data bridge) or approved contract terms like the ICO’s International Data Transfer Agreement.
+      </p>
+
+      <h2 id="keeping">How long we keep it</h2>
+      <p>We keep personal information only for as long as we need it.</p>
+      <ul>
+        <li><strong>Booking details:</strong> while you are booking sessions with us, and for a reasonable time afterwards so we can answer any questions about them.</li>
+        <li><strong>Payment and accounting records:</strong> for as long as UK tax rules require. HMRC currently asks for at least five years.</li>
+        <li><strong>Enquiries that don't lead to a booking:</strong> only as long as we need them to deal with your enquiry.</li>
+        <li><strong>Website statistics:</strong> we only see totals, not records about you. Cloudflare and our other providers keep their own logs for limited periods, set out in their privacy notices.</li>
+      </ul>
+      {/* TODO: if you decide on set retention periods (for example for booking records), add them above. */}
+
+      <h2 id="rights">Your rights</h2>
+      <p>Under UK data protection law, you have the right to:</p>
+      <ul class="rights">
+        {rights.map((r) => (
+          <li>
+            <span class="r-head"><span class="r-t">{r.t}</span><span class="r-law">{r.law}</span></span>
+            <span class="r-d">{r.d}</span>
+          </li>
+        ))}
+      </ul>
+      <p>
+        To use any of these rights, email <span class="ph">[contact email]</span>.
+        There is normally no charge. We may need to check it is really you before we act, and we will reply within one month.
+      </p>
+
+      <h2 id="complaints">Complaints</h2>
+      <p>
+        If you are unhappy with how we have handled your information, please tell us first
+        at <span class="ph">[contact email]</span> so we can try to put it right.
+      </p>
+      <p>
+        You also have the right to complain to the Information Commissioner’s Office (ICO), the UK’s data protection regulator,
+        at <a href="https://ico.org.uk/make-a-complaint/" rel="noopener">ico.org.uk/make-a-complaint</a>.
+      </p>
+
+      <h2 id="changes">Changes to this notice</h2>
+      <p>
+        We will update this notice if the way we handle personal information changes, for example when we add a new service or provider.
+        The current version is always on this page.
+      </p>
+      {/* TODO: add a "Last updated" date here when this notice is published. If you teach under-18s, add how that works (for example a parent or guardian booking for them). If you start a mailing list, add a section on it. */}
+    </article>
+  </div>
+</Base>
+
+<style>
+  /* Hero: .page-hero in global.css */
+  .lede { margin-top: 20px; max-width: 40em; text-wrap: pretty; }
+
+  /* The short version */
+  .short { display: grid; gap: 14px; margin-top: clamp(28px, 4vw, 44px); border-left: 4px solid var(--yellow); }
+  .short .spk { gap: 10px; font-size: 1rem; }
+  @media (min-width: 900px) { .short .spk { grid-template-columns: 1fr 1fr; column-gap: 40px; } }
+
+  /* Contents + text */
+  .doc { display: grid; gap: 28px; padding-top: clamp(28px, 4vw, 48px); }
+  @media (min-width: 1000px) {
+    .doc { grid-template-columns: 220px minmax(0, 1fr); gap: 64px; align-items: start; }
+    .toc { position: sticky; top: 24px; }
+  }
+  .toc { padding: 18px 20px; border: 1px solid var(--nav); border-radius: 16px; background: var(--panel); }
+  .toc-t { margin-bottom: 8px; }
+  .toc ol { counter-reset: t; display: grid; gap: 0 16px; font-size: 0.9rem; }
+  @media (min-width: 480px) and (max-width: 999px) { .toc ol { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 720px) and (max-width: 999px) { .toc ol { grid-template-columns: 1fr 1fr 1fr; } }
+  .toc li { counter-increment: t; display: flex; }
+  .toc a { display: flex; gap: 0.55em; width: 100%; padding: 6px 0; color: var(--paper); line-height: 1.35; }
+  .toc a::before { content: counter(t, decimal-leading-zero); content: counter(t, decimal-leading-zero) / ""; flex: none; min-width: 1.4em; color: var(--yellow); font-weight: 700; font-size: 0.82em; line-height: 1.65; }
+  .toc a:hover { color: var(--yellow); }
+
+  .prose { max-width: 70ch; }
+  .prose > h2 { scroll-margin-top: 24px; }
+  .prose > h2:first-child { margin-top: 0; }
+  /* Hanging indent for the sparkle bullets */
+  .prose ul:not(.providers, .rights) li { padding-left: 1.45em; text-indent: -1.45em; }
+
+  .contact { display: grid; gap: 2px; padding: 14px 18px; border: 1px solid var(--nav); border-radius: 14px; background: var(--panel); }
+  .prose .contact { color: var(--paper); }
+
+  /* Placeholder text, shown as obviously unfinished */
+  .ph { padding: 0 0.35em; border: 1px dashed var(--yellow); border-radius: 6px; color: var(--yellow); font-weight: 600; white-space: nowrap; }
+
+  /* One card per activity */
+  .use { margin-top: 0.4em; padding: clamp(18px, 3vw, 24px); border: 1px solid var(--nav); border-radius: 18px; background: var(--panel); }
+  .prose .use h3 { margin: 0 0 12px; font-size: 1.15rem; letter-spacing: -0.02em; line-height: 1.25; }
+  .use dl { margin: 0; display: grid; }
+  .use dl > div { display: grid; gap: 2px; padding-block: 10px; border-top: 1px solid var(--line); }
+  .use dt { color: var(--yellow); font-size: 0.74rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.5; }
+  .use dd { margin: 0; color: var(--paper); font-size: 0.97rem; }
+  @media (min-width: 640px) {
+    .use dl > div { grid-template-columns: 11em 1fr; gap: 16px; }
+    .use dt { padding-top: 0.2em; }
+  }
+
+  /* Providers */
+  .prose .providers { gap: 0; border-top: 1px solid var(--line); }
+  .providers li { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+  .prose .providers li::before { content: none; }
+  .p-name { color: var(--white); font-weight: 700; }
+  .p-role { grid-column: 1; color: var(--muted); font-size: 0.94rem; }
+  .providers a { grid-column: 2; grid-row: 1 / span 2; align-self: center; padding: 6px 0; font-size: 0.9rem; font-weight: 600; white-space: nowrap; }
+
+  /* Rights */
+  .prose .rights { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+  .rights li { display: grid; align-content: start; gap: 6px; padding: 16px 18px; border: 1px solid var(--nav); border-radius: 14px; background: var(--panel); }
+  .prose .rights li::before { content: none; }
+  .r-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; }
+  .r-t { color: var(--white); font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em; }
+  .r-law { color: var(--yellow); font-size: 0.74rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .r-d { color: var(--muted); font-size: 0.94rem; }
+</style>

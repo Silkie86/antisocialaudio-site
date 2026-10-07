@@ -1,0 +1,89 @@
+---
+// Section #lessons: how 1:1 lessons work, what you can learn, and which DAWs are covered.
+import { services, daws, hourlyRate, gbp, bookingHref } from '../../data/site';
+import { maxDiscountPct, packSizes } from '../../data/pricing';
+import Steps from '../Steps.astro';
+
+// Line icons for the service tiles (24px grid, drawn with the brand stroke). A service without an icon falls back to the sparkle.
+const icons: Record<string, string> = {
+  Mixing: '<path d="M6 3v18M12 3v18M18 3v18"/><path d="M4 15h4M10 8h4M16 12h4"/>',
+  Mastering: '<path d="M3.5 17a8.5 8.5 0 0 1 17 0"/><path d="M12 17l4.5-5.5"/><path d="M3 21h18"/>',
+  'Music Theory': '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  'Sound Design': '<path d="M2 12c1.7-6.7 3.3-6.7 5 0s3.3 6.7 5 0 3.3-6.7 5 0 3.3 6.7 5 0"/>',
+  Arranging: '<path d="M3 3v18"/><rect x="6" y="4" width="8" height="4" rx="1"/><rect x="11" y="10" width="10" height="4" rx="1"/><rect x="6" y="16" width="11" height="4" rx="1"/>',
+};
+
+const steps = [
+  {
+    title: 'Free 30-min consult',
+    text: 'A no-strings chat with Solomon about your music production goals. He gets a feel for your level and how lessons can be tailored to you.',
+  },
+  {
+    title: 'Choose your hours',
+    text: `Book a single hour at ${gbp(hourlyRate)}, or save up to ${maxDiscountPct}% with a ${packSizes} pack.`,
+  },
+  {
+    title: 'Learn one-to-one, online',
+    text: 'Your classes follow a customised learning plan, from the basics to advanced techniques.',
+  },
+];
+---
+<section class="sec wrap" id="lessons" aria-labelledby="lessons-title">
+  <div class="sec-head">
+    <p class="kick">1:1 Lessons</p>
+    <h2 id="lessons-title">How lessons work</h2>
+  </div>
+
+  <Steps steps={steps} />
+
+  <div class="cover">
+    <div class="cov cov-g">
+      <h3>What you can learn</h3>
+      <ul class="tiles">
+        {services.map((s) => (
+          <li class:list={{ 'no-ico': !icons[s] }}>
+            {icons[s] && <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={icons[s]} />}
+            <span>{s}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div class="cov cov-d">
+      <h3>Bring your DAW</h3>
+      <p class="lbl" id="daw-specialist">Specialist in</p>
+      <ul class="chips" aria-labelledby="daw-specialist">
+        {daws.specialist.map((d) => <li>{d}</li>)}
+      </ul>
+      <p class="lbl" id="daw-fundamentals">Fundamentals apply to</p>
+      <ul class="chips chips--dim" aria-labelledby="daw-fundamentals">
+        {daws.fundamentals.map((d) => <li>{d}</li>)}
+      </ul>
+    </div>
+  </div>
+
+  <div class="cta">
+    <a class="btn" href={bookingHref('consult')}>Book your free consult</a>
+  </div>
+</section>
+
+<style>
+  .cover { display: grid; gap: 16px; margin: clamp(36px, 5vw, 56px) 0 28px; }
+  @media (min-width: 780px) { .cover { grid-template-columns: 1.15fr 1fr; } }
+  .cov { display: grid; gap: 14px; align-content: start; border-radius: var(--radius); padding: clamp(20px, 4vw, 34px); }
+  .cov h3 { font-size: 1.35rem; }
+  .cov-g { background: var(--green); align-content: stretch; grid-template-rows: auto 1fr; }
+  .cov-d { background: var(--panel); border: 1px solid var(--nav); }
+  .lbl:not(:first-of-type) { margin-top: 6px; }
+
+  .tiles { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tiles li {
+    flex: 1 1 max(30%, 7.5em); display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    min-height: 5.2em; padding: 0.85em 0.95em; border-radius: 12px;
+    background: var(--yellow); color: var(--ink); font-weight: 700; line-height: 1.2;
+  }
+  .tiles svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tiles .no-ico::before { content: "\2726"; content: "\2726" / ""; font-size: 1.25em; line-height: 1; }
+
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+  @media (max-width: 479px) { .cta .btn { flex: 1 1 100%; } }
+</style>

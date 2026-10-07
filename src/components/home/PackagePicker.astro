@@ -1,0 +1,108 @@
+---
+// Section #prices: lesson package picker, worked out from hourlyRate and each package's discount in site.ts.
+//
+// No JavaScript. Each package has its own real "Continue" link placed straight after its card. Where the browser
+// supports :has() (all current browsers), only the link for the checked package is shown, so the one visible
+// Continue button always points at bookingHref(selected package). Without :has() every package shows its own
+// Continue link under its card, so each package still has a working link.
+import { gbp, bookingHref, payments } from '../../data/site';
+import { packageRows } from '../../data/pricing';
+
+const money = (n: number) => gbp(n, { pence: true });
+---
+<section class="sec wrap" id="prices" aria-labelledby="prices-title">
+  <div class="sec-head">
+    <p class="kick">Prices</p>
+    <h2 id="prices-title">Pick your hours</h2>
+    <p>Every hour is one-to-one with Silkie, online. The more you book, the less each hour costs.</p>
+  </div>
+
+  <fieldset class="plans" style={`--cols: ${packageRows.length}`}>
+    <legend class="visually-hidden">Choose a lesson package</legend>
+    {packageRows.map((p) => (
+      <>
+        <label class:list={['plan', { best: p.best }]}>
+          {p.best && <span class="flag">Best value</span>}
+          <span class="p-top">
+            <input type="radio" name="lesson-hours" value={p.key} checked={p.best} />
+            <span class="p-name">{p.name}</span>
+          </span>
+          <span class="p-sub">{p.sub}</span>
+          <span class="rate"><b>{money(p.perHour)}</b><span>per hour</span></span>
+          <span class="row"><span>Total</span><span>{money(p.total)}</span></span>
+          <span class="row">
+            <span>You save</span>
+            {p.saving > 0 ? <span>{money(p.saving)}</span> : <span><span aria-hidden="true">–</span><span class="visually-hidden">nothing</span></span>}
+          </span>
+        </label>
+        <a class="btn go" href={bookingHref(p.key)}>Continue with {p.name} · {money(p.total)}</a>
+      </>
+    ))}
+    {payments.payLater && <p class="later"><b>Buy now, pay later</b> options at checkout (they may vary by location).</p>}
+  </fieldset>
+</section>
+
+<style>
+  .plans { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 16px; }
+  @media (min-width: 780px) {
+    /* Fallback: each card sits in its own column with its Continue link underneath. */
+    .plans {
+      grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); grid-template-rows: auto auto;
+      grid-auto-flow: column; row-gap: 22px;
+    }
+  }
+
+  .plan {
+    position: relative; display: flex; flex-direction: column; gap: 6px;
+    background: var(--panel); border: 2px solid var(--nav); border-radius: 18px; padding: 24px 22px 20px;
+    cursor: pointer; transition: border-color 0.2s, background-color 0.2s;
+  }
+  .plan:hover { border-color: color-mix(in srgb, var(--yellow) 55%, transparent); }
+  .plan:has(input:checked) {
+    border-color: var(--yellow);
+    background: linear-gradient(165deg, color-mix(in srgb, var(--green) 60%, transparent), var(--panel) 62%);
+  }
+  .p-top { display: flex; align-items: center; gap: 12px; }
+  .plan input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--yellow); cursor: pointer; }
+  .p-name { color: var(--white); font-weight: 800; font-size: 1.3rem; letter-spacing: -0.02em; }
+  .p-sub { color: var(--muted); font-size: 0.9rem; padding-left: 34px; }
+  .rate { display: flex; align-items: baseline; gap: 8px; margin: 6px 0; }
+  .rate b { color: var(--white); font-size: clamp(2.2rem, 4.4vw, 2.9rem); font-weight: 900; letter-spacing: -0.045em; line-height: 1; }
+  .rate > span { color: var(--muted); font-size: 0.9rem; }
+  .best .rate b { color: var(--yellow); }
+  .row { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 8px; font-size: 0.94rem; }
+  .row > span:first-child { color: var(--muted); }
+  .row > span:last-child { color: var(--white); font-weight: 600; }
+  @media (min-width: 780px) { .rate { margin: 12px 0 10px; } }
+  @media (min-width: 780px) and (max-width: 1023px) {
+    .plan { padding-inline: 18px; }
+    .p-sub { padding-left: 0; }
+  }
+
+  /* Continue links. Fallback (no :has): every link shows, straight after its own card. */
+  .go { padding-inline: 0.8em; font-size: clamp(0.94rem, 4vw, 1rem); }
+  .later { color: var(--muted); font-size: 0.94rem; align-self: center; }
+  .later b { color: var(--yellow); font-weight: 600; }
+  @media (min-width: 780px) {
+    .go { align-self: start; }
+    .later { grid-row: 3; grid-column: 1 / -1; }
+  }
+
+  @supports selector(:has(a)) {
+    /* Only the checked package's link shows: straight under its card on phones, below all the cards from 780px. */
+    .go { display: none; margin-top: 6px; }
+    .plan:has(input:checked) + .go { display: block; }
+    .later { order: 2; }
+    @media (min-width: 780px) {
+      /* Button and pay-later note share the row under the cards: button first, note beside it. */
+      .plans { grid-auto-flow: row; --go-w: 380px; }
+      .go { grid-row: 2; grid-column: 1 / -1; justify-self: start; width: var(--go-w); margin-top: 10px; }
+      .later { grid-row: 2; grid-column: 1 / -1; margin: 10px 0 0 calc(var(--go-w) + 24px); }
+    }
+    /* One clear focus ring on the card instead of a small one on the radio. */
+    .plan input:focus-visible { outline: none; }
+    .plan:has(input:focus-visible) { outline: 3px solid var(--yellow); outline-offset: 3px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { .plan { transition: none; } }
+</style>

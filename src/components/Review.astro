@@ -1,0 +1,15 @@
+---
+import { review } from '../data/site';
+---
+<figure class="review">
+  <p class="stars" role="img" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(review.rating)}</p>
+  <blockquote><p>“{review.quote}”</p></blockquote>
+  <figcaption>{review.source}</figcaption>
+</figure>
+
+<style>
+  .review { display: flex; flex-direction: column; justify-content: space-between; gap: 20px; background: var(--yellow); color: var(--ink); border-radius: var(--radius); padding: clamp(22px, 4vw, 36px); }
+  .stars { font-size: 1.3rem; letter-spacing: .18em; line-height: 1; }
+  blockquote p { font-size: clamp(1.3rem, 2.5vw, 1.75rem); font-weight: 700; letter-spacing: -.025em; line-height: 1.28; }
+  figcaption { font-weight: 600; font-size: .9rem; border-top: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); padding-top: 14px; }
+</style>

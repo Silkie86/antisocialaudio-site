@@ -1,0 +1,100 @@
+# Redirects for antisocialaudio.co.uk
+#
+# Sends addresses from the old WordPress site to the matching new page, so old links, bookmarks and
+# Google results keep working. Cloudflare reads this file when the site is deployed.
+#
+# Format: one rule per line, "old-address  new-address  301". 301 means "moved for good", which tells
+# Google to move the old page's ranking to the new one. Lines starting with # are notes.
+#
+# Rules of the file (Cloudflare docs: developers.cloudflare.com/workers/static-assets/redirects/):
+# - Cloudflare treats /events and /events/ as different addresses, so each old page has two lines.
+# - The new address can include a #section (e.g. /#prices); the browser jumps to it.
+# - Query strings such as /?page_id=12 cannot be matched, so they are not listed.
+# - Fixed addresses go first; the wildcard (*) rules go last. The first matching line wins.
+# - Limits: 2,000 fixed and 100 wildcard rules.
+#
+# CONFIRMED old addresses (known from the current site):
+#   /music-productibook-now/          the current booking page (Amelia)
+#   /events/                          the current workshops page
+#   /product/silkie-bassmasterclass/  the masterclass in the shop
+#
+# GUESSED old addresses: worked out from the old menu (Home, Packages, F.A.Q., Terms, DJ Bookings,
+# Account, Book Lessons, Book Workshops) and the default addresses WordPress, WooCommerce and Yoast
+# create. Before launch, check them against the WordPress export: in WordPress go to Pages > All Pages
+# and Products > All Products (hover a title to see its address), or Tools > Export. Delete guesses
+# that never existed and add any old address that is missing. A guess that never existed does no harm.
+#
+# Never point an old address at a page that does not exist on the new site.
+
+# ---------- Confirmed ----------
+
+/music-productibook-now/            /book/        301
+/music-productibook-now             /book/        301
+/events/                            /workshops/   301
+/events                             /workshops/   301
+/product/silkie-bassmasterclass/    /workshops/   301
+/product/silkie-bassmasterclass     /workshops/   301
+
+# ---------- Guessed: old menu ----------
+
+# Home
+/home/                              /             301
+/home                               /             301
+# Packages: now the prices section of the home page
+/packages/                          /#prices      301
+/packages                           /#prices      301
+# F.A.Q. (WordPress turns "F.A.Q." into f-a-q)
+/f-a-q/                             /faq/         301
+/f-a-q                              /faq/         301
+/faqs/                              /faq/         301
+/faqs                               /faq/         301
+# Terms
+/terms-and-conditions/              /terms/       301
+/terms-and-conditions               /terms/       301
+/terms-conditions/                  /terms/       301
+/terms-conditions                   /terms/       301
+# DJ Bookings (the new page is /dj-bookings/, so only other spellings need a rule)
+/dj-booking/                        /dj-bookings/ 301
+/dj-booking                         /dj-bookings/ 301
+# Account (customer accounts are gone; bookings are made on the booking page)
+/account/                           /book/        301
+/account                            /book/        301
+# Book Lessons / Book Workshops / Book Now buttons
+/book-lessons/                      /book/        301
+/book-lessons                       /book/        301
+/book-now/                          /book/        301
+/book-now                           /book/        301
+/book-workshops/                    /workshops/   301
+/book-workshops                     /workshops/   301
+
+# ---------- Guessed: WordPress and WooCommerce defaults ----------
+
+/shop/                              /workshops/   301
+/shop                               /workshops/   301
+/cart/                              /book/        301
+/cart                               /book/        301
+/checkout/                          /book/        301
+/checkout                           /book/        301
+/my-account/                        /book/        301
+/my-account                         /book/        301
+/privacy-policy/                    /privacy/     301
+/privacy-policy                     /privacy/     301
+/refund_returns/                    /terms/       301
+/refund_returns                     /terms/       301
+
+# Old sitemaps (WordPress and Yoast), so search engines find the new one
+/wp-sitemap.xml                     /sitemap-index.xml 301
+/sitemap_index.xml                  /sitemap-index.xml 301
+/sitemap.xml                        /sitemap-index.xml 301
+
+# ---------- Wildcards (keep these last) ----------
+
+# Any other shop product (lesson packs and so on) goes to the booking page
+/product/*                          /book/        301
+/product-category/*                 /book/        301
+# Order-received and account sub-pages
+/checkout/*                         /book/        301
+/my-account/*                       /book/        301
+# Single event pages under the old events listing
+/events/*                           /workshops/   301
+/event/*                            /workshops/   301

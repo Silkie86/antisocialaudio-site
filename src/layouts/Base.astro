@@ -1,0 +1,61 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../data/site';
+
+interface Props {
+  /** Page title. The site name is added after it. Only the home page leaves it out, to get the site's own title. */
+  title?: string;
+  description?: string;
+  /** Structured data (schema.org) for this page, as a plain object. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Keep the page out of search results (and give it no canonical address), e.g. the 404 page. */
+  noindex?: boolean;
+  /** Where the header's Book button goes. Only the DJ page changes it, to its own enquiry form. */
+  bookHref?: string;
+}
+
+const { title, description = site.description, jsonLd, noindex = false, bookHref = '/book/' } = Astro.props;
+const fullTitle = title ? `${title} | ${site.name}` : `${site.name}: bass music production lessons with Silkie`;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+---
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <meta name="theme-color" content="#070707" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/* Every weight is used near the top of every page (nav 500, links 600, buttons 700, headings 800, hero 900),
+        so all are preloaded: a weight that arrives late reflows the page and can push a #link's target out of view. */}
+    <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/poppins-500.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/poppins-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/poppins-800.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/poppins-900.woff2" as="font" type="font/woff2" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {!noindex && <meta property="og:url" content={canonical} />}
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {/* "<" is escaped so no text in the data can ever close the script element early. */}
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />}
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <Header bookHref={bookHref} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

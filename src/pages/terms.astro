@@ -1,0 +1,64 @@
+---
+// Terms page. The real terms could not be copied from the old WordPress site, so this is the page shell
+// with a clearly marked placeholder. Do not write cancellation or refund rules here from memory.
+// Layout: the terms text on the left (.prose), the free consult card beside it on wide screens.
+import Base from '../layouts/Base.astro';
+import ConsultCard from '../components/ConsultCard.astro';
+import { site } from '../data/site';
+
+const description = `Terms for booking one-to-one lessons, packs and workshops with ${site.name}. Questions about bookings, cancellations or refunds? Ask before you book.`;
+---
+<Base title="Terms" description={description}>
+  <section class="page-hero" aria-labelledby="terms-title">
+    <div class="wrap">
+      <p class="kick">The small print</p>
+      <h1 id="terms-title">Terms</h1>
+      <p class="lede">The terms that apply when you book a consultation, lesson, pack or workshop with {site.name}.</p>
+    </div>
+  </section>
+
+  <div class="sec wrap doc">
+    <article class="prose">
+      {/* TODO: paste the current Terms from the WordPress Terms page here, as h2 / p / ul inside this .prose block, then remove the notice below. Do not add cancellation or refund rules that are not in those terms. */}
+      <div class="notice" role="note">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 4v4h4" /><path d="M4 13a8 8 0 0 0 14.3 4.9M20 20v-4h-4" /></svg>
+        <div>
+          <p class="notice-t">Moving to the new site</p>
+          <p>Our full terms are being moved to the new site. If you have a question about bookings, cancellations or refunds, get in touch before you book.</p>
+        </div>
+      </div>
+
+      <h2>Before you book</h2>
+      <p>
+        Prices, packs and what each option includes are on the <a href="/book/">booking page</a>,
+        and the <a href="/faq/">FAQ</a> answers the most common questions about lessons and booking.
+      </p>
+
+      <h2>Your personal information</h2>
+      <p>How we collect, use and look after your details when you book or get in touch is explained in our <a href="/privacy/">privacy notice</a>.</p>
+    </article>
+
+    <div class="side">
+      <ConsultCard heading="Got a question first?" />
+    </div>
+  </div>
+</Base>
+
+<style>
+  /* Hero: .page-hero in global.css */
+  .lede { margin-top: 20px; max-width: 36em; text-wrap: pretty; }
+
+  /* Terms text + consult card (sticky beside long text on wide screens) */
+  .doc { display: grid; gap: 40px; padding-top: clamp(32px, 5vw, 56px); }
+  .prose { align-content: start; }
+  .side { max-width: 68ch; }
+  @media (min-width: 900px) {
+    .doc { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 56px; align-items: start; }
+    .side { position: sticky; top: 24px; }
+  }
+
+  /* Placeholder notice: the shared .notice (global.css), as on /book/, with a little more room */
+  .notice { padding: clamp(16px, 3vw, 22px) clamp(16px, 3vw, 24px); }
+  .notice p { color: var(--paper); }
+  .notice .notice-t { color: var(--white); font-weight: 700; margin-bottom: 4px; }
+</style>
