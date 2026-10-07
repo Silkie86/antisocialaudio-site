@@ -58,8 +58,9 @@ export function legacyBooking(): string | null {
   return bareHost(legacyBookingUrl) === bareHost(site.url) ? null : legacyBookingUrl;
 }
 
+/** The option's booking link, or its place on /book/ while the link is not set (null or ''), as BookAction and /book/ treat it. */
 export function bookingHref(key: keyof typeof booking): string {
-  return booking[key] ?? `/book/#${key}`;
+  return booking[key] || `/book/#${key}`;
 }
 
 export const services = ['Mixing', 'Mastering', 'Music Theory', 'Sound Design', 'Arranging'];
@@ -71,17 +72,20 @@ export const daws = {
 
 // Lesson pricing. Package totals are worked out from the hourly rate and discount,
 // so they always match: 5 hours = £118.75, 10 hours = £225.00.
+// Each package's name ("5 hours") and label ("5-hour pack · 5% off") are worked out from its hours and discount
+// too, in src/data/pricing.ts, which also has the other price helpers the pages use.
 export const hourlyRate = 25;
 
 export const packages = [
-  { key: 'lesson', hours: 1, discount: 0, name: '1 hour', sub: 'Single lesson' },
-  { key: 'pack5', hours: 5, discount: 0.05, name: '5 hours', sub: '5-hour pack · 5% off' },
-  { key: 'pack10', hours: 10, discount: 0.1, name: '10 hours', sub: '10-hour pack · 10% off', best: true },
+  { key: 'lesson', hours: 1, discount: 0 },
+  { key: 'pack5', hours: 5, discount: 0.05 },
+  { key: 'pack10', hours: 10, discount: 0.1, best: true },
 ] as const;
 
 export function packagePrice(p: { hours: number; discount: number }) {
   const full = p.hours * hourlyRate;
-  const total = full * (1 - p.discount);
+  // Rounded to whole pence once, here, so the pages and the structured data always show the same figure.
+  const total = Math.round(full * (1 - p.discount) * 100) / 100;
   return { total, perHour: total / p.hours, saving: full - total };
 }
 
@@ -101,6 +105,7 @@ export const workshop = {
   where: 'Live on Zoom',
   points: ['Any DAW, all levels welcome', 'Q&A with Silkie after the session', 'Limited spaces'],
   // Set to an ISO date (e.g. '2026-11-16') when the next masterclass is scheduled.
+  // Anything that is not a real date in that form stops the build with a message saying so.
   nextDate: null as string | null,
 };
 
@@ -111,9 +116,13 @@ export const workshop = {
  */
 export function nextWorkshop(): { iso: string; long: string; short: string } | null {
   const iso = workshop.nextDate;
-  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+  if (!iso) return null;
+  // A mistyped date stops the build, rather than quietly hiding the date and the booking button on every page.
+  // The pattern and NaN checks come first: toISOString() throws on an invalid date.
   const date = new Date(`${iso}T12:00:00Z`);
-  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== iso) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== iso) {
+    throw new Error(`workshop.nextDate "${iso}" in src/data/site.ts is not a real date in YYYY-MM-DD form, e.g. '2026-11-16'.`);
+  }
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   if (date < today) return null;
@@ -122,7 +131,7 @@ export function nextWorkshop(): { iso: string; long: string; short: string } | n
   return { iso, long: format('long'), short: format('short') };
 }
 
-// How people can pay at checkout. Each mention on the site (the FAQ, the home page, /book/) follows these,
+// How people can pay at checkout. Each mention on the site (the FAQ, the home page, /book/, the privacy notice) follows these,
 // so if one isn't offered when Cal.com, Stripe and PayPal are set up, set it to false here.
 // TODO: confirm all three once checkout is live; buy now, pay later was offered on the old WordPress shop.
 export const payments = {
@@ -139,6 +148,6 @@ export const review = {
 
 export const video = {
   title: 'Antisocial Audio Workshop with Silkie x Bitwig x Africa Rising Music Conference 2023',
-  // Add the YouTube video ID (the part after watch?v=) to play it in-page. Until then the poster links to the channel.
+  // TODO: add the YouTube video ID (the part after watch?v=) to play it in-page. Until then the poster links to the channel.
   youtubeId: null as string | null,
 };

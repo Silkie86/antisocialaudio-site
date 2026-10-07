@@ -25,7 +25,9 @@
  */
 
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-const MAX_BODY_BYTES = 32 * 1024;
+// The form's worst case at its field limits, URL-encoded, is about 52 KB: a 5,000-character message alone can be
+// up to 45 KB at 9 bytes a character (Chinese, Japanese or Korean text, say). 64 KB leaves room for that.
+const MAX_BODY_BYTES = 64 * 1024;
 const SENDER_NAME = 'Antisocial Audio website';
 const FALLBACK_PAGE = '/dj-bookings/';
 
@@ -34,7 +36,7 @@ const FIELDS = {
   name: { max: 100, required: true, error: 'Please enter your name.' },
   email: { max: 254, required: true, error: 'Please enter a valid email address, like name@example.com.' },
   event: { max: 150, required: true, error: 'Please enter the name of the event.' },
-  date: { max: 10, required: false, error: 'Please choose a date that has not passed yet, or leave it blank.' },
+  date: { max: 10, required: false, error: 'Please choose a date between today and five years from now, or leave it blank.' },
   location: { max: 200, required: true, error: 'Please tell us where the event is.' },
   message: { max: 5000, required: true, multiline: true, error: 'Please tell us a little about the event.' },
 };
@@ -218,7 +220,10 @@ function cleanText(value) {
     .trim();
 }
 
-/** A real calendar date as YYYY-MM-DD, not before yesterday (so time zones never reject today), within 5 years. */
+/**
+ * A real calendar date as YYYY-MM-DD, not before yesterday (so time zones never reject today), within 5 years.
+ * The form's own limit (today to five years ahead, in the visitor's time zone) always falls inside this range.
+ */
 function isUsableDate(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return false;
@@ -234,7 +239,12 @@ function isUsableDate(value) {
 
 /** Ask Cloudflare whether the Turnstile token is genuine. Any failure counts as "not verified". */
 async function verifyTurnstile(token, secret, ip) {
-  if (!token || token.length > 2048) return false;
+  if (!token || token.length > 2048) {
+    console.warn(
+      'enquiry: no usable Turnstile token in the form, so it was refused. If the form shows no spam check, the site was built without PUBLIC_TURNSTILE_SITE_KEY.',
+    );
+    return false;
+  }
   const body = new URLSearchParams({ secret, response: token });
   if (ip) body.set('remoteip', ip);
   try {

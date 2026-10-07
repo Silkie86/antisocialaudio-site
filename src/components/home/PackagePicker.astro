@@ -6,7 +6,7 @@
 // Continue button always points at bookingHref(selected package). Without :has() every package shows its own
 // Continue link under its card, so each package still has a working link.
 import { gbp, bookingHref, payments } from '../../data/site';
-import { packageRows } from './pricing';
+import { packageRows } from '../../data/pricing';
 
 const money = (n: number) => gbp(n, { pence: true });
 ---
@@ -73,10 +73,6 @@ const money = (n: number) => gbp(n, { pence: true });
   .row { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 8px; font-size: 0.94rem; }
   .row > span:first-child { color: var(--muted); }
   .row > span:last-child { color: var(--white); font-weight: 600; }
-  .flag {
-    position: absolute; top: -13px; right: 18px; padding: 0.3em 0.85em; border-radius: 99px;
-    background: var(--yellow); color: var(--ink); font-size: 0.74rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
-  }
   @media (min-width: 780px) { .rate { margin: 12px 0 10px; } }
   @media (min-width: 780px) and (max-width: 1023px) {
     .plan { padding-inline: 18px; }
@@ -95,7 +91,7 @@ const money = (n: number) => gbp(n, { pence: true });
   @supports selector(:has(a)) {
     /* Only the checked package's link shows: straight under its card on phones, below all the cards from 780px. */
     .go { display: none; margin-top: 6px; }
-    .plan:has(input:checked) + .go { display: flex; }
+    .plan:has(input:checked) + .go { display: block; }
     .later { order: 2; }
     @media (min-width: 780px) {
       /* Button and pay-later note share the row under the cards: button first, note beside it. */

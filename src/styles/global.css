@@ -1,6 +1,6 @@
 /*
   Antisocial Audio global styles.
-  Brand colours and type come from the original site (see /mnt/project-files/website/brand.md):
+  Brand colours and type come from the original site (the tokens below; see CLAUDE.md):
   ink #070707, green #006223, yellow #E6B900, off-white #F5F5F5, Poppins throughout.
   The site is dark-only by design. Change a colour here and it changes everywhere.
 */
@@ -73,14 +73,18 @@ strong, b { color: var(--white); font-weight: 700; }
 .kick { color: var(--yellow); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; text-wrap: balance; }
 .kick::before, .spk li::before, .btn::before { content: "\2726"; content: "\2726" / ""; margin-right: 0.5em; }
 
+/* Quieter small uppercase label, no sparkle (e.g. "Specialist in", "Next date") */
+.lbl { color: var(--muted); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+
 /* Sparkle bullet list */
 .spk { display: grid; gap: 6px; font-size: 0.94rem; }
 .spk li { display: flex; }
 .spk li::before { color: var(--yellow); flex: none; }
 
-/* Buttons: green by default, .btn--yellow on green or dark panels that need contrast */
+/* Buttons: green by default, .btn--yellow on green or dark panels that need contrast.
+   Block layout (not flex), so a label that wraps keeps the sparkle on its first line. */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-block; align-content: center; text-wrap: balance;
   min-height: 48px; padding: 0.7em 1.3em;
   border: 2px solid var(--green); border-radius: 10px;
   background: var(--green); color: var(--white);
@@ -93,7 +97,7 @@ strong, b { color: var(--white); font-weight: 700; }
 .btn--yellow::before { color: var(--ink); }
 .btn--yellow:hover { border-color: var(--white); }
 .btn--ghost { background: transparent; border-color: var(--nav); }
-.btn--block { display: flex; width: 100%; }
+.btn--block { display: block; width: 100%; }
 
 /* Pills */
 .pill { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.35em 0.8em; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--yellow) 55%, transparent); color: var(--yellow); white-space: nowrap; }
@@ -105,6 +109,29 @@ strong, b { color: var(--white); font-weight: 700; }
 .card--yellow { background: var(--yellow); border-color: var(--yellow); color: var(--ink); }
 .card--yellow :is(h2, h3, strong, .kick) { color: var(--ink); }
 .card--yellow :focus-visible { outline-color: var(--ink); }
+
+/* Yellow icon tile (an inline SVG drawn with the brand stroke inside it) */
+.ico { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 12px; background: var(--yellow); color: var(--ink); }
+.ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* "Best value" flag on a plan card's top edge (the card needs position: relative) */
+.flag {
+  position: absolute; top: -13px; right: 18px; padding: 0.3em 0.85em; border-radius: 99px;
+  background: var(--yellow); color: var(--ink); font-size: 0.74rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+/* Notice box with a yellow edge and an optional .i line icon (an inline SVG) on the left */
+.notice {
+  display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px;
+  border: 1px solid var(--nav); border-left: 4px solid var(--yellow); border-radius: 14px; background: var(--panel);
+}
+.notice .i { flex: none; width: 24px; height: 24px; margin-top: 2px; fill: none; stroke: var(--yellow); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Inner-page hero: green glow, big h1, lede. Pages add their own spacing and widths. */
+.page-hero { background: radial-gradient(70% 90% at 90% 0%, color-mix(in srgb, var(--green) 38%, transparent), transparent 62%); }
+.page-hero > .wrap { padding-block: clamp(32px, 5vw, 64px) 0; }
+.page-hero h1 { font-size: clamp(2.6rem, 6.6vw, 5.1rem); font-weight: 900; letter-spacing: -0.045em; line-height: 0.96; margin-top: 14px; }
+.lede { font-size: clamp(1rem, 1.6vw, 1.125rem); color: var(--muted); }
 
 /* Chips (DAW names etc.) */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }

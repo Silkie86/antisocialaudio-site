@@ -63,7 +63,7 @@ The website can only email addresses you have verified. Sending to a verified ad
    | --- | --- |
    | `PUBLIC_TURNSTILE_SITE_KEY` | the Turnstile **site key** from step 3 |
 
-   It is a *build* variable because it is written into the page when the site is built. After adding or changing it, run the build again.
+   It is a *build* variable because it is written into the page when the site is built. After adding or changing it, start a new build (push a commit, or retry the latest build). Pressing Deploy after saving a variable does not rebuild the page.
 
 ## Step 5: Add the runtime settings, then the domain
 
@@ -109,9 +109,9 @@ If it fails, the Worker's **Logs** in the dashboard say why. The code logs the r
 | "It could not be delivered just now" | `email not sent: E_SENDER_NOT_VERIFIED` | `ENQUIRY_FROM` must be on `antisocialaudio.co.uk`, and Email Routing must be on for that domain (step 1). |
 | "It could not be delivered just now" | another `email not sent` error | Usually `ENQUIRY_TO` is not a verified destination address (step 2). |
 | "We could not confirm you are human" | `Turnstile rejected the token` | The site key (build variable) and secret key (runtime secret) must come from the same widget, and the widget's hostnames must include the domain. |
-| No spam check box on the form | (nothing) | `PUBLIC_TURNSTILE_SITE_KEY` was not set when the site was built. Add it (step 4) and build again. |
+| "We could not confirm you are human", and no spam check box on the form | `no usable Turnstile token` | `TURNSTILE_SECRET_KEY` is set but the site was built without `PUBLIC_TURNSTILE_SITE_KEY`. Add the build variable (step 4) and start a new build. |
 
-Until `TURNSTILE_SECRET_KEY` is set, the code skips the Turnstile check, so only the honeypot stops bots (the log says so on every enquiry). Set it before you link to the page.
+Until `TURNSTILE_SECRET_KEY` is set, the code skips the Turnstile check, so only the honeypot stops bots (the log says so on every enquiry). Set it before you link to the page, together with the build variable from step 4: a site built without `PUBLIC_TURNSTILE_SITE_KEY` shows no spam check box on the form.
 
 ## Testing on your own computer (optional)
 

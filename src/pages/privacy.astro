@@ -4,7 +4,7 @@
 // DJ enquiry emails sent via Cloudflare, and YouTube videos that load only when clicked.
 // It is a draft: see the comment at the top of the page body. Placeholders are marked with TODO comments.
 import Base from '../layouts/Base.astro';
-import { site, workshop } from '../data/site';
+import { site, workshop, payments } from '../data/site';
 
 const sections = [
   { id: 'who', label: 'Who we are' },
@@ -18,6 +18,24 @@ const sections = [
   { id: 'changes', label: 'Changes' },
 ];
 
+// Who takes payment follows `payments` in src/data/site.ts (Stripe for cards, PayPal for PayPal), as /book/ and the FAQ do.
+const payBy = [payments.card && 'Stripe', payments.paypal && 'PayPal'].filter((name): name is string => Boolean(name));
+const payDetails = [payments.card && 'card', payments.paypal && 'PayPal'].filter((name): name is string => Boolean(name));
+const and = (items: string[]) => new Intl.ListFormat('en-GB', { type: 'conjunction' }).format(items);
+const or = (items: string[]) => new Intl.ListFormat('en-GB', { type: 'disjunction' }).format(items);
+const payGive = payBy.length
+  ? `You give your ${or(payDetails)} details to ${or(payBy)}, not to us${payments.card ? ', so we never see your full card number' : ''}. `
+  : '';
+const payHandlers = [
+  payBy.length === 1 &&
+    `${payBy[0]}. It processes your payment for us, and for some things, such as preventing fraud and meeting its own legal duties, it acts as an independent controller, so its own privacy notice applies too.`,
+  payBy.length > 1 &&
+    `${and(payBy)}. They process your payment for us, and for some things, such as preventing fraud and meeting their own legal duties, they act as independent controllers, so their own privacy notices apply too.`,
+  payments.payLater && 'If you choose a buy now, pay later option at checkout, the company that provides it handles your application under its own privacy notice.',
+]
+  .filter(Boolean)
+  .join(' ');
+
 // Providers and their own privacy notices. TODO before launch: check each link still works.
 const providers = [
   { name: 'Cal.com', role: 'Booking and scheduling', href: 'https://cal.com/privacy' },
@@ -26,7 +44,7 @@ const providers = [
   { name: 'Zoom', role: 'Live online workshops', href: 'https://explore.zoom.us/en/privacy/' },
   { name: 'Cloudflare', role: 'Website hosting and security, visitor statistics, the spam check on the DJ form, and sending DJ enquiries to us by email', href: 'https://www.cloudflare.com/privacypolicy/' },
   { name: 'Google (YouTube)', role: 'Videos, only if you choose to play one', href: 'https://policies.google.com/privacy' },
-];
+].filter((p) => !['Stripe', 'PayPal'].includes(p.name) || payBy.includes(p.name));
 
 const rights = [
   { t: 'See it', law: 'Access', d: 'Ask for a copy of the personal information we hold about you.' },
@@ -43,7 +61,7 @@ const whereLower = workshop.where.charAt(0).toLowerCase() + workshop.where.slice
 const description = `How ${site.name} collects, uses and looks after your personal information when you book, pay, send a DJ enquiry or visit the site, and your rights.`;
 ---
 <Base title="Privacy notice" description={description}>
-  <section class="hero" aria-labelledby="privacy-title">
+  <section class="page-hero" aria-labelledby="privacy-title">
     {/* DRAFT: this privacy notice is a draft written for the planned setup (Cal.com, Stripe, PayPal, Zoom, Cloudflare, YouTube). Fill in every TODO, check it matches how things actually run, and ideally have it reviewed before relying on it. */}
     <div class="wrap">
       <p class="kick">Privacy</p>
@@ -70,7 +88,7 @@ const description = `How ${site.name} collects, uses and looks after your person
 
   <div class="sec wrap doc">
     <nav class="toc" aria-labelledby="toc-title">
-      <p id="toc-title" class="toc-t">On this page</p>
+      <p id="toc-title" class="toc-t lbl">On this page</p>
       <ol>
         {sections.map((s) => <li><a href={`#${s.id}`}>{s.label}</a></li>)}
       </ol>
@@ -89,7 +107,7 @@ const description = `How ${site.name} collects, uses and looks after your person
       {/* TODO: confirm Antisocial Audio is run by Solomon as a sole trader. If it is a limited company, name the company as the controller above instead. */}
       {/* TODO: replace every [contact email] on this page with the email address for privacy questions. Add a postal address too if you want one listed, and the ICO registration number if you have paid the data protection fee. */}
       <p class="contact">
-        <span class="contact-l">Privacy questions</span>
+        <span class="lbl">Privacy questions</span>
         <span>Email <span class="ph">[contact email]</span></span>
       </p>
 
@@ -109,10 +127,10 @@ const description = `How ${site.name} collects, uses and looks after your person
       <section class="use" aria-labelledby="use-pay">
         <h3 id="use-pay">Paying for a booking</h3>
         <dl>
-          <div><dt>What we collect</dt><dd>You give your card or PayPal details to Stripe or PayPal, not to us, so we never see your full card number. We receive what we need to match your payment to your booking, such as your name, email address, what you bought, the amount, the date and whether the payment went through.</dd></div>
+          <div><dt>What we collect</dt><dd>{payGive}We receive what we need to match your payment to your booking, such as your name, email address, what you bought, the amount, the date and whether the payment went through.</dd></div>
           <div><dt>Why</dt><dd>To take payment, sort out any payment questions, and keep the business records the law requires.</dd></div>
           <div><dt>Legal basis</dt><dd>Contract, and legal obligation: we must keep tax and accounting records.</dd></div>
-          <div><dt>Who else handles it</dt><dd>Stripe and PayPal. They process your payment for us, and for some things, such as preventing fraud and meeting their own legal duties, they act as independent controllers, so their own privacy notices apply too. If you choose a buy now, pay later option at checkout, the company that provides it handles your application under its own privacy notice.</dd></div>
+          <div><dt>Who else handles it</dt><dd>{payHandlers}</dd></div>
         </dl>
       </section>
 
@@ -130,7 +148,7 @@ const description = `How ${site.name} collects, uses and looks after your person
       <section class="use" aria-labelledby="use-msg">
         <h3 id="use-msg">Sending a DJ enquiry or emailing us</h3>
         <dl>
-          <div><dt>What we collect</dt><dd>What you enter in the <a href="/dj-bookings/">DJ booking form</a>: your name, email address, the event name, date (if you give one), location or venue, and your message. Or whatever you include in an email to us.</dd></div>
+          <div><dt>What we collect</dt><dd>What you enter in the <a href="/dj-bookings/#enquiry">DJ booking form</a>: your name, email address, the event name, date (if you give one), location or venue, and your message. Or whatever you include in an email to us.</dd></div>
           <div><dt>Why</dt><dd>To reply to you and, if it goes ahead, arrange the booking.</dd></div>
           <div><dt>Legal basis</dt><dd>Legitimate interests: replying to a message you chose to send us. If a booking follows, contract.</dd></div>
           <div><dt>Who else handles it</dt><dd>The form sends your enquiry to us by email using Cloudflare. The website itself doesn't keep a copy. If the form shows a spam check, that is Cloudflare Turnstile, which looks at technical signals from your browser to tell people from bots. Our email provider then stores your enquiry like any other email.</dd></div>
@@ -161,7 +179,7 @@ const description = `How ${site.name} collects, uses and looks after your person
       <ul>
         <li>Cloudflare may set a strictly necessary security cookie, for example if your browser is asked to complete a security check.</li>
         <li>YouTube, but only after you choose to play a video.</li>
-        <li>Cal.com, Stripe and PayPal, when you use them to book or pay, under their own cookie policies.</li>
+        <li>{and(['Cal.com', ...payBy])}, when you use them to book or pay, under their own cookie policies.</li>
       </ul>
 
       <h2 id="sharing">Who we share it with</h2>
@@ -232,10 +250,8 @@ const description = `How ${site.name} collects, uses and looks after your person
 </Base>
 
 <style>
-  .hero { background: radial-gradient(70% 90% at 90% 0%, color-mix(in srgb, var(--green) 38%, transparent), transparent 62%); }
-  .hero > .wrap { padding-block: clamp(32px, 5vw, 64px) 0; }
-  h1 { font-size: clamp(2.6rem, 6.6vw, 5.1rem); font-weight: 900; letter-spacing: -0.045em; line-height: 0.96; margin-top: 14px; }
-  .lede { margin-top: 20px; font-size: clamp(1rem, 1.6vw, 1.125rem); color: var(--muted); max-width: 40em; text-wrap: pretty; }
+  /* Hero: .page-hero in global.css */
+  .lede { margin-top: 20px; max-width: 40em; text-wrap: pretty; }
 
   /* The short version */
   .short { display: grid; gap: 14px; margin-top: clamp(28px, 4vw, 44px); border-left: 4px solid var(--yellow); }
@@ -249,7 +265,7 @@ const description = `How ${site.name} collects, uses and looks after your person
     .toc { position: sticky; top: 24px; }
   }
   .toc { padding: 18px 20px; border: 1px solid var(--nav); border-radius: 16px; background: var(--panel); }
-  .toc-t { color: var(--muted); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .toc-t { margin-bottom: 8px; }
   .toc ol { counter-reset: t; display: grid; gap: 0 16px; font-size: 0.9rem; }
   @media (min-width: 480px) and (max-width: 999px) { .toc ol { grid-template-columns: 1fr 1fr; } }
   @media (min-width: 720px) and (max-width: 999px) { .toc ol { grid-template-columns: 1fr 1fr 1fr; } }
@@ -266,7 +282,6 @@ const description = `How ${site.name} collects, uses and looks after your person
 
   .contact { display: grid; gap: 2px; padding: 14px 18px; border: 1px solid var(--nav); border-radius: 14px; background: var(--panel); }
   .prose .contact { color: var(--paper); }
-  .contact-l { color: var(--muted); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
 
   /* Placeholder text, shown as obviously unfinished */
   .ph { padding: 0 0.35em; border: 1px dashed var(--yellow); border-radius: 6px; color: var(--yellow); font-weight: 600; white-space: nowrap; }

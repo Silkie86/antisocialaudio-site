@@ -26,10 +26,12 @@ Most of what you will want to change lives in two files, `src/data/site.ts` and 
 | Ways to pay (card, PayPal, pay later) | `src/data/site.ts` | `payments` |
 | Workshop name, price or next date | `src/data/site.ts` | `workshop` |
 | The review quote | `src/data/site.ts` | `review` |
-| The YouTube video on the home page | `src/data/site.ts` | `video` |
+| The YouTube video (home page and `/workshops/`) | `src/data/site.ts` | `video` |
 | Labels, years, YouTube channel | `src/data/site.ts` | `site` |
 | FAQ questions and answers | `src/data/faq.ts` | the list of `q` (question) and `a` (answer) |
 | Wording on one page | `src/pages/` | the file named after the page, e.g. `workshops.astro` |
+| Homepage sections (hero, lessons, prices) | `src/components/home/` | `Hero.astro`, `Lessons.astro`, `PackagePicker.astro` |
+| The tutor blurb and the free consult card (on several pages) | `src/components/` | `Credentials.astro`, `ConsultCard.astro` |
 | Colours and fonts | `src/styles/global.css` | the values at the top (best left to a developer) |
 | Redirects from old addresses | `public/_redirects` | see [Old addresses](#old-addresses-from-the-wordpress-site) |
 | Security and caching settings | `public/_headers` | see [Security settings](#security-settings) |
@@ -38,7 +40,7 @@ Text in these files sits between quote marks, like `'Live on Zoom'`. Keep the qu
 
 ### Prices
 
-Lessons are worked out from one number, `hourlyRate` (currently `25`, meaning £25 an hour). The pack prices are calculated from it and each pack's discount, so they always add up: 5 hours at 5% off is £118.75 and 10 hours at 10% off is £225.00. Change `hourlyRate` or a `discount` (`0.05` means 5%) and every price on the site updates.
+Lessons are worked out from one number, `hourlyRate` (currently `25`, meaning £25 an hour). The pack prices are calculated from it and each pack's discount, so they always add up: 5 hours at 5% off is £118.75 and 10 hours at 10% off is £225.00. Change `hourlyRate` or a `discount` (`0.05` means 5%) and every price on the site updates, along with each pack's label (such as "5-hour pack · 5% off").
 
 The FAQ answer "What are your rates?" is built from the same numbers, so it updates too.
 
@@ -64,11 +66,11 @@ Just below it, `legacyBookingUrl` can point at an old booking page to use meanwh
 
 ### Ways to pay
 
-`payments` in `src/data/site.ts` says which ways to pay are offered at checkout: `card`, `paypal` and `payLater` (buy now, pay later). The FAQ, the home page and the "Ways to pay" part of `/book/` follow it. They are all `true` for now; once checkout is set up, change any that are not offered to `false`.
+`payments` in `src/data/site.ts` says which ways to pay are offered at checkout: `card`, `paypal` and `payLater` (buy now, pay later). The FAQ, the home page, the privacy notice and the "Ways to pay" part of `/book/` follow it. They are all `true` for now; once checkout is set up, change any that are not offered to `false`.
 
 ### The next workshop date
 
-Set `nextDate` inside `workshop` to the date in year-month-day form, in quote marks. For example, 16 November 2026 would be `nextDate: '2026-11-16',`. The site then shows the date wherever the workshop appears, with a button to book it (on the home page, the workshops page and `/book/`). Until then they say the next date will be announced soon and show no booking button, even if the workshop's booking link is set. After the workshop, set the next date, or put `null` back (no quote marks) if there isn't one yet. (The site checks the date when it is built, so a date that has passed disappears the next time the site is published.)
+Set `nextDate` inside `workshop` to the date in year-month-day form, in quote marks. For example, 16 November 2026 would be `nextDate: '2026-11-16',`. The site then shows the date wherever the workshop appears, with a button to book it (on the home page, the workshops page and `/book/`). Until then they say the next date will be announced soon and show no booking button, even if the workshop's booking link is set. After the workshop, set the next date, or put `null` back (no quote marks) if there isn't one yet. (The site checks the date when it is built, so a date that has passed disappears the next time the site is published. A date that is not written in that form, or is not a real date, stops the build with a message saying so.)
 
 ### The FAQ
 
@@ -76,12 +78,12 @@ Each question in `src/data/faq.ts` looks like this:
 
 ```ts
   {
-    q: 'Which DAWs are covered?',
-    a: 'Solomon Rose aka Silkie specialises in ...',
+    q: 'How do I book?',
+    a: 'Hit Book, then pick a service ...',
   },
 ```
 
-They appear on the FAQ page in the order they are listed. The information Google reads from the FAQ page is built from the same list, so it never goes out of date.
+They appear on the FAQ page in the order they are listed. The answers about services, rates and DAWs are built from `src/data/site.ts` (`services`, the prices, `payments` and `daws`), so change those facts there rather than in `faq.ts`. The information Google reads from the FAQ page is built from the same list, so it never goes out of date.
 
 The home page shows three of these questions, picked by their exact wording in `src/pages/index.astro` (the line starting `<FaqList only=`). If you reword one of those three in `faq.ts`, change it there too: otherwise the build stops with a message naming the question it could not find.
 
@@ -145,7 +147,7 @@ Work through these in order. Steps 1 to 3 can be done while the old site is stil
 - [ ] Create a free Cloudflare account. Add a domain: `antisocialaudio.co.uk`, Free plan. Cloudflare copies your current DNS records; check the list looks complete, especially any `MX` and `TXT` records used for email.
 - [ ] Note the two nameservers Cloudflare gives you for the domain (they look like `name.ns.cloudflare.com`).
 - [ ] Create the site: Workers & Pages > Create > Import a repository, pick this GitHub repository, and enter the build settings in [How the site goes live](#how-the-site-goes-live). When it finishes, open the `….workers.dev` address Cloudflare gives you and click through every page. (That test address is hidden from Google automatically.)
-- [ ] Turnstile (the spam check on the DJ form): Turnstile > Add widget, hostname `antisocialaudio.co.uk` (add the `….workers.dev` address as a second hostname if you want to try the form there), mode Managed. Put the site key and secret key into the Worker's settings as shown in [How the site goes live](#how-the-site-goes-live), then redeploy.
+- [ ] Turnstile (the spam check on the DJ form): Turnstile > Add widget, hostname `antisocialaudio.co.uk` (add the `….workers.dev` address as a second hostname if you want to try the form there), mode Managed. Put the site key and secret key into the Worker's settings as shown in [How the site goes live](#how-the-site-goes-live), then start a new build (push a commit, or retry the latest build). Deploying from the settings page alone does not add the spam check to the page.
 
 ### 4. Move the domain to Cloudflare (at Hostinger)
 
@@ -197,9 +199,9 @@ Cloudflare treats `/events` and `/events/` as different addresses, so each old p
 
 | Path | What it holds |
 | --- | --- |
-| `src/data/` | All facts: prices, booking links, workshop, review, FAQ |
+| `src/data/` | All facts: prices, booking links, workshop, review, FAQ, plus the price helpers the pages share (`pricing.ts`) |
 | `src/pages/` | One file per page |
-| `src/components/` | Shared pieces: header, footer, logo, FAQ list, enquiry form, video, tutor credentials, numbered steps, the brand wave, and the booking button on `/book/` |
+| `src/components/` | Shared pieces: header, footer, logo, FAQ list, enquiry form, video, review, tutor credentials, free consult card, numbered steps, the brand wave, and the booking button on `/book/`. `home/` holds the homepage sections (hero, lessons, prices). |
 | `src/layouts/Base.astro` | The page frame every page uses: title, description, search-engine tags |
 | `src/styles/global.css` | Brand colours, Poppins and shared styles. The site is dark only. |
 | `public/` | Files published as they are: fonts, favicon, `_redirects`, `_headers`, `robots.txt` |

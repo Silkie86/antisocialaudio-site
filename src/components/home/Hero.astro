@@ -2,7 +2,7 @@
 // Homepage hero and the two "Pick your path" doors: 1:1 Lessons (lead) and Workshops.
 // DJ bookings deliberately do not get a door here; they live on /dj-bookings/.
 import { site, workshop, nextWorkshop, hourlyRate, services, daws, gbp, bookingHref } from '../../data/site';
-import { cheapest } from './pricing';
+import { cheapest } from '../../data/pricing';
 import Wave from '../Wave.astro';
 
 const serviceLine = services.map((s, i) => (i === 0 ? s : s.toLowerCase())).join(', ');
@@ -25,7 +25,7 @@ const next = nextWorkshop();
 
     <h2 class="pick-t">Pick your path</h2>
     <div class="doors">
-      <article class="door door--lead" aria-labelledby="door-lessons">
+      <article class="card card--green door" aria-labelledby="door-lessons">
         <div class="door-body">
           <div class="door-head">
             <span class="ico" aria-hidden="true">
@@ -52,7 +52,7 @@ const next = nextWorkshop();
         </div>
       </article>
 
-      <article class="door" aria-labelledby="door-workshops">
+      <article class="card door" aria-labelledby="door-workshops">
         <div class="door-body">
           <div class="door-head">
             <span class="ico" aria-hidden="true">
@@ -119,15 +119,10 @@ const next = nextWorkshop();
   .doors { display: grid; gap: 16px; }
   @media (min-width: 760px) { .doors { grid-template-columns: 1.15fr 1fr; } }
 
-  .door {
-    display: flex; flex-direction: column; gap: 14px;
-    background: var(--panel); border: 1px solid var(--nav); border-radius: var(--radius); padding: clamp(20px, 3vw, 28px);
-  }
-  .door--lead { background: var(--green); border-color: var(--green); }
-  .door--lead :is(p, .price span) { color: var(--paper); }
+  /* Each door is a .card (the lessons door .card--green); .ico is in global.css too. */
+  .door { display: flex; flex-direction: column; gap: 14px; }
+  .card--green :is(p, .price span) { color: var(--paper); }
   .door-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .ico { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 12px; background: var(--yellow); color: var(--ink); }
-  .ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .door-body { display: flex; flex-direction: column; gap: 14px; }
   .door h3 { font-size: clamp(1.55rem, 3vw, 1.9rem); }
   .door-body > p { color: var(--muted); text-wrap: pretty; }
@@ -142,7 +137,7 @@ const next = nextWorkshop();
   .door-cta .btn { padding-inline: 0.8em; }
   .door-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px; font-size: 0.9rem; font-weight: 600; }
   .door-links a { padding: 6px 2px; color: var(--yellow); text-decoration: underline; text-underline-offset: 4px; }
-  .door--lead .door-links a { color: var(--white); }
+  .card--green .door-links a { color: var(--white); }
   .door-links a:hover { color: var(--white); text-decoration-color: var(--yellow); }
 
   /* Side by side, the two doors share their rows, so the price lines and buttons line up

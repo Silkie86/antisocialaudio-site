@@ -10,8 +10,8 @@ import VideoPoster from '../components/VideoPoster.astro';
 import Review from '../components/Review.astro';
 import FaqList from '../components/FaqList.astro';
 import ConsultCard from '../components/ConsultCard.astro';
-import { site, workshop, hourlyRate, gbp, bookingHref } from '../data/site';
-import { cheapest, packageRows } from '../components/home/pricing';
+import { site, workshop, nextWorkshop, hourlyRate, gbp, bookingHref } from '../data/site';
+import { cheapest, packageRows } from '../data/pricing';
 
 // About 155 characters, so search results show it in full.
 const description = `1:1 online bass music production lessons with ${site.tutor.alias}, UK dubstep producer and Bitwig Certified Trainer. ${gbp(hourlyRate)}/hr, packs from ${gbp(cheapest.perHour)}/hr, plus Zoom workshops.`;
@@ -59,7 +59,7 @@ const jsonLd = {
       name: workshop.title,
       serviceType: 'Live online music production workshop',
       provider: { '@id': orgId },
-      offers: { '@type': 'Offer', price: workshop.price.toFixed(2), priceCurrency: 'GBP', url: abs(bookingHref('workshop')) },
+      offers: { '@type': 'Offer', price: workshop.price.toFixed(2), priceCurrency: 'GBP', url: abs(nextWorkshop() ? bookingHref('workshop') : '/workshops/') },
     },
   ],
 };

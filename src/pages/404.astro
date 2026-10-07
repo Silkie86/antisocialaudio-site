@@ -3,7 +3,7 @@
 // so every link here is root-relative and the page is kept out of search results.
 import Base from '../layouts/Base.astro';
 import { site, workshop, hourlyRate, gbp } from '../data/site';
-import { packHours, listJoin } from '../components/home/pricing';
+import { packSizes } from '../data/pricing';
 
 const ways = [
   {
@@ -29,7 +29,7 @@ const ways = [
     kick: 'Booking',
     title: 'Book a session',
     // "a 5- or 10-hour pack" (suspended hyphen on every pack size but the last)
-    text: `Book a single lesson, a ${listJoin(packHours.map((h) => `${h}-`), 'or')}hour pack, or a place on a workshop.`,
+    text: `Book a single lesson, a ${packSizes} pack, or a place on a workshop.`,
     meta: 'Start with a free 30-min consult',
   },
 ] as const;
@@ -63,7 +63,7 @@ const ways = [
       <h2 class="pick-t">Where to next?</h2>
       <ul class="ways">
         {ways.map((w) => (
-          <li class:list={['way', { 'way--lead': 'lead' in w && w.lead }]}>
+          <li class:list={['card', 'way', { 'card--green': 'lead' in w && w.lead }]}>
             <span class="ico" aria-hidden="true">
               {w.key === 'lessons' && <svg viewBox="0 0 24 24" focusable="false"><path d="M4 15v-3a8 8 0 0 1 16 0v3" /><rect x="3" y="14" width="4" height="7" rx="1.5" /><rect x="17" y="14" width="4" height="7" rx="1.5" /></svg>}
               {w.key === 'workshops' && <svg viewBox="0 0 24 24" focusable="false"><rect x="2" y="6" width="14" height="12" rx="2" /><path d="M16 10.5 22 7v10l-6-3.5z" /></svg>}
@@ -112,25 +112,19 @@ const ways = [
   /* Three ways out: the whole card is the link (stretched from the heading link) */
   .ways { display: grid; gap: 16px; }
   @media (min-width: 880px) { .ways { grid-template-columns: repeat(3, 1fr); } }
-  .way {
-    position: relative; display: flex; flex-direction: column; gap: 10px;
-    padding: clamp(20px, 3vw, 28px);
-    background: var(--panel); border: 1px solid var(--nav); border-radius: var(--radius);
-    transition: border-color .2s, transform .2s;
-  }
+  /* Each way out is a .card (the lessons one .card--green); .ico is in global.css too. */
+  .way { position: relative; display: flex; flex-direction: column; gap: 10px; transition: border-color .2s, transform .2s; }
   .way:hover { border-color: var(--yellow); transform: translateY(-3px); }
   .way:focus-within { border-color: var(--yellow); }
-  .way--lead { background: var(--green); border-color: var(--green); }
-  .way--lead .kick { color: var(--white); }
-  .way--lead .kick::before { color: var(--yellow); }
-  .ico { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 6px; border-radius: 12px; background: var(--yellow); color: var(--ink); }
-  .ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .card--green .kick { color: var(--white); }
+  .card--green .kick::before { color: var(--yellow); }
+  .ico { margin-bottom: 6px; }
   .way h3 { font-size: clamp(1.45rem, 2.6vw, 1.75rem); }
   .way h3 a::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
   .way h3 a:focus-visible { outline: none; }
   .way h3 a:focus-visible::after { outline: 3px solid var(--yellow); outline-offset: 3px; }
   .text { color: var(--muted); text-wrap: pretty; }
-  .way--lead .text { color: var(--paper); }
+  .card--green .text { color: var(--paper); }
   .way-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
   .meta { color: var(--white); font-size: 0.9rem; font-weight: 600; text-wrap: balance; }
   .arrow {

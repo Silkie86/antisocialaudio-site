@@ -6,7 +6,7 @@ import Credentials from '../components/Credentials.astro';
 import Steps from '../components/Steps.astro';
 import Wave from '../components/Wave.astro';
 import { site, workshop, nextWorkshop, bookingHref, gbp, hourlyRate } from '../data/site';
-import { cheapest } from '../components/home/pricing';
+import { cheapest } from '../data/pricing';
 
 // Next date (null when none is set, or it had passed when the site was built).
 const next = nextWorkshop();
@@ -64,7 +64,7 @@ if (next) {
 }
 ---
 <Base title={`${workshop.title}, live on Zoom`} description={description} jsonLd={jsonLd}>
-  <section class="hero">
+  <section class="page-hero">
     <div class="wrap">
       <div class="hero-grid">
         <div class="hero-copy">
@@ -188,15 +188,12 @@ if (next) {
 </Base>
 
 <style>
-  /* Hero */
-  .hero { background: radial-gradient(70% 90% at 90% 0%, color-mix(in srgb, var(--green) 38%, transparent), transparent 62%); }
-  .hero > .wrap { padding-block: clamp(32px, 5vw, 64px) 0; }
+  /* Hero (.page-hero in global.css) */
   .hero-grid { display: grid; gap: 32px; align-items: end; }
   @media (min-width: 940px) { .hero-grid { grid-template-columns: 1.35fr 1fr; gap: 56px; } }
 
-  h1 { font-size: clamp(2.6rem, 6.6vw, 5.1rem); font-weight: 900; letter-spacing: -0.045em; line-height: 0.96; margin-top: 14px; }
   .hl { color: var(--yellow); }
-  .lede { margin-top: 22px; font-size: clamp(1rem, 1.6vw, 1.125rem); color: var(--muted); max-width: 34em; }
+  .lede { margin-top: 22px; max-width: 34em; }
   .creds { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 22px; color: var(--white); font-size: 0.9rem; font-weight: 600; }
   .creds li { display: flex; }
   .creds li::before { content: "\2726"; content: "\2726" / ""; color: var(--yellow); margin-right: 0.5em; }

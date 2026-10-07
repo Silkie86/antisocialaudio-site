@@ -45,7 +45,7 @@ const fields: Field[] = [
     required: false,
     half: true,
     hint: 'Leave blank if it is not fixed yet.',
-    msg: 'Please choose a date that has not passed yet, or leave it blank.',
+    msg: 'Please choose a date between today and five years from now, or leave it blank.',
   },
   {
     name: 'location',
@@ -176,16 +176,21 @@ const describedBy = (f: Field) => [f.hint && `${id(f.name)}-hint`, `${id(f.name)
     // From here on this script checks the fields itself, with messages next to each one.
     form.noValidate = true;
 
-    // No dates in the past (the visitor's own today).
+    // Dates from the visitor's own today to five years ahead, which always falls inside the endpoint's range.
+    // (new Date() turns 29 February five years on into 1 March.)
     const date = form.querySelector<HTMLInputElement>('input[type="date"]');
     if (date) {
       const t = new Date();
+      const m = new Date(t.getFullYear() + 5, t.getMonth(), t.getDate());
       date.min = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+      date.max = `${m.getFullYear()}-${pad(m.getMonth() + 1)}-${pad(m.getDate())}`;
     }
 
     const problem = (el: Control) => {
       if (el.required && !el.value.trim()) return el.dataset.msg ?? '';
       if (el.validity.tooLong) return `Please keep this under ${el.maxLength.toLocaleString('en-GB')} characters.`;
+      // A date with only some parts filled in (say, no year) arrives as an empty value marked badInput.
+      if (el.type === 'date' && el.validity.badInput) return 'Please enter the full date (day, month and year), or leave it blank.';
       return el.validity.valid ? '' : (el.dataset.msg ?? el.validationMessage);
     };
 
