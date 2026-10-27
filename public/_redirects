@@ -13,10 +13,16 @@
 # - Fixed addresses go first; the wildcard (*) rules go last. The first matching line wins.
 # - Limits: 2,000 fixed and 100 wildcard rules.
 #
-# CONFIRMED old addresses (known from the current site):
+# CONFIRMED old addresses (from the current site and its WordPress export of 27 October 2026):
 #   /music-productibook-now/          the current booking page (Amelia)
+#   /book-now/                        the home page's Book Now buttons
 #   /events/                          the current workshops page
 #   /product/silkie-bassmasterclass/  the masterclass in the shop
+#   /frequently-asked-questions/      the FAQ page (the menu linked /faq, which exists on the new site)
+#   /terms-and-conditions/            the Terms and cancellation policy
+#   /account/                         the Amelia customer panel
+#   /masterclasses/, /downloads/...   the masterclass recordings shop and its checkout
+#   /coming-soon/                     the maintenance page
 #
 # GUESSED old addresses: worked out from the old menu (Home, Packages, F.A.Q., Terms, DJ Bookings,
 # Account, Book Lessons, Book Workshops) and the default addresses WordPress, WooCommerce and Yoast
@@ -34,6 +40,16 @@
 /events                             /workshops/   301
 /product/silkie-bassmasterclass/    /workshops/   301
 /product/silkie-bassmasterclass     /workshops/   301
+/frequently-asked-questions/        /faq/         301
+/frequently-asked-questions         /faq/         301
+/masterclasses/                     /workshops/   301
+/masterclasses                      /workshops/   301
+/masterclass-checkout/              /workshops/   301
+/masterclass-checkout               /workshops/   301
+/coming-soon/                       /             301
+/coming-soon                        /             301
+/downloads/                         /workshops/   301
+/downloads                          /workshops/   301
 
 # ---------- Guessed: old menu ----------
 
@@ -95,6 +111,8 @@
 # Order-received and account sub-pages
 /checkout/*                         /book/        301
 /my-account/*                       /book/        301
+# The masterclass recordings (Easy Digital Downloads)
+/downloads/*                        /workshops/   301
 # Single event pages under the old events listing
 /events/*                           /workshops/   301
 /event/*                            /workshops/   301

@@ -25,9 +25,10 @@ Most of what you will want to change lives in two files, `src/data/site.ts` and 
 | Booking links (Cal.com, Stripe) | `src/data/site.ts` | `booking` |
 | Ways to pay (card, PayPal, pay later) | `src/data/site.ts` | `payments` |
 | Workshop name, price or next date | `src/data/site.ts` | `workshop` |
-| The review quote | `src/data/site.ts` | `review` |
+| Reviews | `src/data/site.ts` | `reviews` (the first one shows on the home page; the rest also show on `/workshops/`) |
 | The YouTube video (home page and `/workshops/`) | `src/data/site.ts` | `video` |
-| Labels, years, YouTube channel | `src/data/site.ts` | `site` |
+| Labels, years, YouTube channel, contact email | `src/data/site.ts` | `site` |
+| DJ biography, artist links, DJ booking email | `src/data/site.ts` | `dj` |
 | FAQ questions and answers | `src/data/faq.ts` | the list of `q` (question) and `a` (answer) |
 | Wording on one page | `src/pages/` | the file named after the page, e.g. `workshops.astro` |
 | Homepage sections (hero, lessons, prices) | `src/components/home/` | `Hero.astro`, `Lessons.astro`, `PackagePicker.astro` |
@@ -132,8 +133,8 @@ Work through these in order. Steps 1 to 3 can be done while the old site is stil
 - [ ] **Booking links.** Set up Cal.com (free): one event type each for the free 30-minute consultation, a 1-hour lesson, the 5-hour pack, the 10-hour pack and the workshop. Connect Stripe in Cal.com for card payments (PayPal can follow later). Paste each link into `booking` in `src/data/site.ts`.
   **Do this before step 4.** Until a link is set, that option cannot be booked online: its button leads to `/book/`, which says online booking opens soon. (The old WordPress booking page, `/music-productibook-now/`, disappears when the domain moves, and its address then redirects to `/book/`. See [Booking links](#booking-links) if you want to keep the old site running at another address meanwhile.)
 - [ ] **Ways to pay.** Once checkout works, check which of card, PayPal and buy now, pay later it really offers, and set `payments` in `src/data/site.ts` to match.
-- [ ] Set the next workshop date (`workshop.nextDate`) if one is planned, and the YouTube video ID (`video.youtubeId`, the part after `watch?v=` in the video's address) if you want the video to play on the page.
-- [ ] Paste your current Terms from WordPress into `src/pages/terms.astro`, and finish the draft privacy notice in `src/pages/privacy.astro` (fill in each part marked TODO, including the contact email).
+- [ ] Set the next workshop date (`workshop.nextDate`) if one is planned.
+- [ ] Check the Terms in `src/pages/terms.astro` (copied from the WordPress Terms page) are still current, and finish the draft privacy notice in `src/pages/privacy.astro` (fill in each part marked TODO).
 - [ ] Look for any other placeholders: every one is marked `TODO` in the files under `src/`. Each says what it needs. Nothing on the site was made up, so these are the gaps only you can fill.
 - [ ] From WordPress, save the logo files and any photos you want to keep, and make a full backup (Hostinger's backup tool, plus Tools > Export in WordPress).
 
@@ -163,7 +164,7 @@ Work through these in order. Steps 1 to 3 can be done while the old site is stil
 - [ ] If you have any mailboxes at Hostinger, save what you need from them first: once Email Routing is on, mail to the domain goes to Gmail instead.
 - [ ] Compute > Email Service > Email Routing > Onboard Domain, and choose `antisocialaudio.co.uk`. Let Cloudflare add the `MX` and `TXT` records it suggests.
 - [ ] Email Routing > Destination Addresses: add your Gmail address and click the link Cloudflare emails you to confirm it.
-- [ ] Email Routing > your domain > Routing Rules > Create routing rule: create the address(es) you want people to write to at `@antisocialaudio.co.uk` and forward each to Gmail.
+- [ ] Email Routing > your domain > Routing Rules > Create routing rule: create the address(es) you want people to write to at `@antisocialaudio.co.uk` and forward each to Gmail. Include `hello@antisocialaudio.co.uk`: the site shows it in the footer, the FAQ, the Terms and the privacy notice.
 - [ ] Send a test email from another account and check it arrives.
 - [ ] In the Worker's settings, set `ENQUIRY_TO` to your Gmail address (the one you just confirmed) and `ENQUIRY_FROM` to an address at `@antisocialaudio.co.uk`. The DJ enquiry form can send email from now on. (The same steps, with more detail, are in `docs/enquiry-form.md`.)
 - [ ] Note: Email Routing only receives. Replies from Gmail come from your Gmail address unless you later set up Gmail's "Send mail as" with an outgoing mail service.

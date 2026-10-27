@@ -1,10 +1,16 @@
 ---
-import { review } from '../data/site';
+// A review from `reviews` in src/data/site.ts. By default the first review, shown big in yellow, using its one-line `pull`
+// when it has one. `compact` gives a quieter dark card with the full review, for a row of several.
+import { reviews } from '../data/site';
+
+interface Props { review?: (typeof reviews)[number]; compact?: boolean }
+const { review = reviews[0], compact = false } = Astro.props;
+const quote = compact ? review.quote : (review.pull ?? review.quote);
 ---
-<figure class="review">
+<figure class:list={['review', { compact }]}>
   <p class="stars" role="img" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(review.rating)}</p>
-  <blockquote><p>“{review.quote}”</p></blockquote>
-  <figcaption>{review.source}</figcaption>
+  <blockquote><p>“{quote}”</p></blockquote>
+  <figcaption>{review.name}{review.note && `, ${review.note}`}</figcaption>
 </figure>
 
 <style>
@@ -12,4 +18,9 @@ import { review } from '../data/site';
   .stars { font-size: 1.3rem; letter-spacing: .18em; line-height: 1; }
   blockquote p { font-size: clamp(1.3rem, 2.5vw, 1.75rem); font-weight: 700; letter-spacing: -.025em; line-height: 1.28; }
   figcaption { font-weight: 600; font-size: .9rem; border-top: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); padding-top: 14px; }
+
+  .compact { gap: 16px; background: var(--panel); color: var(--paper); border: 1px solid var(--line); padding: clamp(20px, 3vw, 28px); }
+  .compact .stars { color: var(--yellow); font-size: 1.1rem; }
+  .compact blockquote p { font-size: clamp(1.05rem, 1.8vw, 1.2rem); font-weight: 600; letter-spacing: -.01em; line-height: 1.45; color: var(--white); }
+  .compact figcaption { color: var(--muted); border-top-color: var(--line); }
 </style>

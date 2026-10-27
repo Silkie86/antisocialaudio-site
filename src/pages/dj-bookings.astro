@@ -5,7 +5,7 @@
 import Base from '../layouts/Base.astro';
 import EnquiryForm from '../components/EnquiryForm.astro';
 import Wave from '../components/Wave.astro';
-import { site } from '../data/site';
+import { site, dj } from '../data/site';
 
 const { name, alias, years } = site.tutor;
 const labelList = new Intl.ListFormat('en-GB', { style: 'long', type: 'conjunction' }).format(site.labels);
@@ -30,6 +30,7 @@ const jsonLd = {
     description: `UK dubstep producer and DJ with releases on ${labelList}.`,
     knowsAbout: ['Dubstep', 'Bass music production', 'Bitwig Studio'],
     hasCredential: { '@type': 'EducationalOccupationalCredential', name: 'Bitwig Certified Trainer' },
+    sameAs: dj.links.map((l) => l.href),
   },
 };
 ---
@@ -66,14 +67,18 @@ const jsonLd = {
       <div class="bio-text">
         <p class="kick">Biography</p>
         <h2 id="bio-h">About {alias}</h2>
-        <p>{name}, aka {alias}, is a UK dubstep producer and DJ. He has been producing dubstep for {years} years, with releases on {labelList}.</p>
-        <p>He is also a Bitwig Certified Trainer, and teaches bass music production here at {site.name}, one-to-one and in live workshops.</p>
-        {/* TODO: add Silkie's own words here once supplied: notable gigs, residencies, radio, press quotes and links to mixes. Use only what he provides. */}
+        {dj.bio.map((para) => <p>{para}</p>)}
+        <ul class="links" aria-label={`${alias} online`}>
+          {dj.links.map((l) => <li><a href={l.href} rel="noopener">{l.label}</a></li>)}
+        </ul>
       </div>
       <dl class="sheet">
         <div><dt>Name</dt><dd>{name}</dd></div>
-        <div><dt>Scene</dt><dd>UK dubstep</dd></div>
+        <div><dt>From</dt><dd>Hammersmith, West London</dd></div>
+        <div><dt>Scene</dt><dd>Dubstep and UK garage</dd></div>
         <div><dt>Producing</dt><dd>{years} years</dd></div>
+        <div><dt>Labels</dt><dd>Antisocial Records, Bedroom Rat Records</dd></div>
+        <div><dt>Radio</dt><dd>Monthly shows on Rinse FM and SWU</dd></div>
         <div><dt>Credential</dt><dd>Bitwig Certified Trainer</dd></div>
         <div><dt>Teaches</dt><dd><a href="/#lessons">1:1 lessons</a> and <a href="/workshops/">workshops</a></dd></div>
       </dl>
@@ -86,6 +91,7 @@ const jsonLd = {
         <p class="kick">Booking enquiry</p>
         <h2 id="enquiry-h">Book {alias}</h2>
         <p>Share what you know so far and we'll reply by email.</p>
+        <p class="direct">Prefer email? Write to <a href={`mailto:${dj.bookingEmail}`}>{dj.bookingEmail}</a>.</p>
       </div>
       <EnquiryForm />
     </div>
@@ -146,6 +152,9 @@ const jsonLd = {
   .bio-text { display: grid; gap: 14px; }
   .bio-text h2 { margin-bottom: 4px; font-size: clamp(2rem, 5.2vw, 3.4rem); }
   .bio-text p:not(.kick) { max-width: 36em; color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.1rem); text-wrap: pretty; }
+  .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .links a { display: inline-block; padding: 10px 16px; border: 1px solid var(--line); border-radius: 999px; color: var(--white); font-weight: 600; font-size: 0.92rem; }
+  .links a:hover { border-color: var(--yellow); color: var(--yellow); }
   .sheet { border-top: 2px solid var(--yellow); }
   .sheet div { display: grid; grid-template-columns: minmax(7.5em, 0.8fr) 1.6fr; gap: 4px 16px; padding-block: 14px; border-bottom: 1px solid var(--line); }
   .sheet dt { padding-top: 0.3em; color: var(--muted); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
@@ -162,4 +171,5 @@ const jsonLd = {
   .enq-intro { display: grid; gap: 14px; align-content: start; }
   .enq-intro h2 { font-size: clamp(2rem, 5.2vw, 3.4rem); }
   .enq-intro > p:not(.kick) { color: var(--muted); font-size: 1.05rem; }
+  .direct a { color: var(--yellow); text-decoration: underline; text-underline-offset: 4px; overflow-wrap: anywhere; }
 </style>
