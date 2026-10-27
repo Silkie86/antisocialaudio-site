@@ -1,0 +1,80 @@
+---
+// Terms page: the cancellation policy and terms from the old WordPress Terms page, with typos and numbering tidied
+// and nothing added. Change the rules only with Solomon's own wording.
+// Layout: the terms text on the left (.prose), the free consult card beside it on wide screens.
+import Base from '../layouts/Base.astro';
+import ConsultCard from '../components/ConsultCard.astro';
+import { site } from '../data/site';
+
+const description = `Terms and cancellation policy for booking one-to-one lessons, packs and workshops with ${site.name}.`;
+
+const cancellation = [
+  'Payment: full payment, or instalment payments if the payment provider offers them, must be arranged at the time of booking. The payment methods you can use are shown based on your location.',
+  'No-shows: if you miss a scheduled lesson without giving notice, the lesson is forfeited and no refund or rescheduling is offered.',
+  'Lessons can be cancelled up to 48 hours before the start for a 75% refund of the total price.',
+  'Lessons can be rescheduled up to 24 hours before the start to any available day and time.',
+];
+
+const terms = [
+  ['Eligibility', 'Lessons are open to individuals aged 13 and above. Participants under the age of 18 must have parental or guardian consent.'],
+  ['Registration', 'To book a lesson, participants must complete the registration process, providing accurate and up-to-date contact information.'],
+  ['Lesson scheduling', 'Lessons are scheduled on a first-come, first-served basis. Participants are responsible for confirming their lesson time and making sure they are available to attend.'],
+  ['Intellectual property', 'All course materials, including lesson plans, videos and resources, are the property of Antisocial Audio and may not be distributed or reproduced without permission.'],
+  ['Copyright', 'Participants are expected to create original work and respect the copyrights of others. Plagiarism and unauthorised use of copyrighted materials will not be tolerated.'],
+  ['Liability', 'Antisocial Audio Ltd and its instructors are not liable for any injury, loss or damage resulting from participation in the lessons.'],
+  ['Code of conduct', 'Participants are expected to behave professionally and courteously during lessons. Antisocial Audio reserves the right to end a lesson if a participant engages in inappropriate behaviour or harassment.'],
+  ['Privacy', 'Personal information collected during registration will be used solely for lesson administration and will not be shared with third parties without consent. Our privacy notice explains this in full.'],
+  ['Changes to these terms', 'Antisocial Audio reserves the right to update or modify these terms and conditions at any time. Participants will be notified of any significant changes.'],
+  ['Governing law', 'These terms and conditions are governed by and construed in accordance with the laws of the United Kingdom.'],
+];
+---
+<Base title="Terms" description={description}>
+  <section class="page-hero" aria-labelledby="terms-title">
+    <div class="wrap">
+      <p class="kick">The small print</p>
+      <h1 id="terms-title">Terms</h1>
+      <p class="lede">The terms that apply when you book a consultation, lesson, pack or workshop with {site.name}.</p>
+    </div>
+  </section>
+
+  <div class="sec wrap doc">
+    <article class="prose">
+      <h2 id="cancellation">Cancellation policy</h2>
+      <ol>
+        {cancellation.map((c) => <li>{c}</li>)}
+      </ol>
+
+      <h2 id="terms">Terms and conditions</h2>
+      <ol>
+        {terms.map(([head, text]) => <li><strong>{head}.</strong> {text}</li>)}
+      </ol>
+
+      <h2>Your personal information</h2>
+      <p>How we collect, use and look after your details when you book or get in touch is explained in our <a href="/privacy/">privacy notice</a>.</p>
+
+      <h2>Questions</h2>
+      <p>Prices, packs and what each option includes are on the <a href="/book/">booking page</a>. For anything else, email <a href={`mailto:${site.email}`}>{site.email}</a> before you book.</p>
+    </article>
+
+    <div class="side">
+      <ConsultCard heading="Got a question first?" />
+    </div>
+  </div>
+</Base>
+
+<style>
+  /* Hero: .page-hero in global.css */
+  .lede { margin-top: 20px; max-width: 36em; text-wrap: pretty; }
+
+  /* Terms text + consult card (sticky beside long text on wide screens) */
+  .doc { display: grid; gap: 40px; padding-top: clamp(32px, 5vw, 56px); }
+  .prose { align-content: start; }
+  .side { max-width: 68ch; }
+  @media (min-width: 900px) {
+    .doc { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 56px; align-items: start; }
+    .side { position: sticky; top: 24px; }
+  }
+
+  .prose ol { list-style: decimal; display: grid; gap: 12px; padding-left: 1.4em; }
+  .prose li::marker { color: var(--yellow); font-weight: 700; }
+</style>

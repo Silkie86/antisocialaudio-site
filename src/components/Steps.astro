@@ -1,0 +1,41 @@
+---
+// A numbered timeline of steps: stacked with a line down the side on phones, three across from 780px.
+// Used for "How lessons work" (home page) and "Book, join, ask" (workshops page).
+interface Props {
+  steps: { title: string; text: string }[];
+}
+const { steps } = Astro.props;
+---
+<ol class="steps">
+  {steps.map((s) => (
+    <li>
+      <h3>{s.title}</h3>
+      <p>{s.text}</p>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .steps { counter-reset: s; display: grid; gap: 30px; }
+  .steps li { counter-increment: s; position: relative; padding-left: 66px; }
+  .steps li::before {
+    content: counter(s); content: counter(s) / "";
+    position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 46px; height: 46px;
+    border-radius: 50%; background: var(--yellow); color: var(--ink); font-weight: 900; font-size: 1.2rem;
+  }
+  .steps li:first-child::before { background: var(--green); color: var(--white); box-shadow: 0 0 0 2px var(--yellow); }
+  .steps li:not(:last-child)::after {
+    content: ""; position: absolute; left: 22px; top: 56px; bottom: -24px; width: 2px;
+    background: linear-gradient(var(--yellow), color-mix(in srgb, var(--yellow) 12%, transparent));
+  }
+  .steps h3 { font-size: 1.3rem; margin: 8px 0 6px; }
+  .steps p { color: var(--muted); text-wrap: pretty; }
+  @media (min-width: 780px) {
+    .steps { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+    .steps li { padding: 68px 12px 0 0; }
+    .steps li:not(:last-child)::after {
+      left: 58px; right: -16px; top: 22px; bottom: auto; width: auto; height: 2px;
+      background: linear-gradient(90deg, var(--yellow), color-mix(in srgb, var(--yellow) 12%, transparent));
+    }
+  }
+</style>

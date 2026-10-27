@@ -1,0 +1,371 @@
+---
+import Base from '../layouts/Base.astro';
+import BookAction from '../components/BookAction.astro';
+import { site, booking, legacyBooking, payments, gbp, hourlyRate, workshop, nextWorkshop, services, daws } from '../data/site';
+import { packageRows, packSizes } from '../data/pricing';
+
+// Booking hub. Every booking button on the site falls back to /book/#<key> until its link is set in site.ts,
+// so each option below has an anchor matching its key: consult, lesson, pack5, pack10, workshop.
+// What each option shows in place of its booking button (the real button, the old booking page, or "opens soon")
+// is decided in one place, src/components/BookAction.astro.
+type Key = keyof typeof booking;
+const next = nextWorkshop();
+const unset = (Object.keys(booking) as Key[]).filter((key) => !booking[key]);
+const legacy = legacyBooking();
+if (unset.length > 0) {
+  console.warn(
+    `[book] No booking link yet for: ${unset.join(', ')}. ` +
+      (legacy ? 'Those options send people to legacyBookingUrl.' : 'Those options cannot be booked online. Set them in src/data/site.ts.'),
+  );
+}
+// The notice at the top only counts options that could be booked now: with no date set, the workshop
+// shows its own "opens when the next date is announced" note and no button, whatever its link.
+const open = (Object.keys(booking) as Key[]).filter((key) => key !== 'workshop' || next);
+const missing = open.filter((key) => !booking[key]);
+const anyMissing = missing.length > 0;
+const allMissing = missing.length === open.length;
+
+const notice = legacy
+  ? allMissing
+    ? 'While we switch over, you can still book every option on our current booking page. Use the button under each option below.'
+    : missing.length === 1
+      ? 'While we switch over, one option is still booked on our current booking page. Its button below takes you there.'
+      : 'While we switch over, some options are still booked on our current booking page. Their buttons below take you there.'
+  : allMissing
+    ? 'The new booking pages open here soon. Until then, the options below cannot be booked online.'
+    : missing.length === 1
+      ? 'One option below cannot be booked online just yet. It is marked, and opens soon.'
+      : 'Some options below cannot be booked online just yet. They are marked, and open soon.';
+
+const lessonFrom = gbp(hourlyRate);
+
+const jump = [
+  { key: 'consult', label: 'Free consult', price: 'Free' },
+  ...packageRows.map((p) => ({ key: p.key, label: p.name, price: gbp(p.total, { pence: true }) })),
+  { key: 'workshop', label: 'Workshop', price: gbp(workshop.price) },
+];
+
+const pageUrl = `${site.url}/book/`;
+const offer = (name: string, price: number, key: Key) => ({
+  '@type': 'Offer', name, price, priceCurrency: 'GBP', url: `${pageUrl}#${key}`,
+});
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Bass music production lessons and workshops',
+  serviceType: 'Online music production tuition',
+  description: site.description,
+  url: pageUrl,
+  provider: { '@type': 'Organization', name: site.name, url: site.url },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Booking options',
+    itemListElement: [
+      offer('Free 30-minute consultation', 0, 'consult'),
+      ...packageRows.map((p) => offer(`1:1 lessons: ${p.name}`, p.total, p.key)),
+      offer(workshop.title, workshop.price, 'workshop'),
+    ],
+  },
+};
+
+const description = `Book a free 30-minute consult, 1:1 bass music production lessons with ${site.tutor.alias} from ${lessonFrom} an hour (less with a ${packSizes} pack), or a ${gbp(workshop.price)} Zoom workshop.`;
+
+// Ways to pay, as set in site.ts (payments).
+const payWays = [
+  { on: payments.card, label: 'Debit or credit card' },
+  { on: payments.paypal, label: 'PayPal' },
+  { on: payments.payLater, label: 'Buy now, pay later' },
+].filter((w) => w.on);
+---
+<Base title="Book lessons, packs and workshops" description={description} jsonLd={jsonLd}>
+  <section class="page-hero">
+    <div class="wrap">
+      <p class="kick">Book</p>
+      <h1>Book with {site.tutor.alias}</h1>
+      <p class="lede">
+        Start with a free consult, book one-to-one lessons by the hour or in a pack, or grab a place on a live workshop.
+        Lessons and workshops are all online.
+      </p>
+
+      <nav class="jump" aria-label="Booking options">
+        <ul>
+          {jump.map((j) => (
+            <li><a href={`#${j.key}`}><span>{j.label}</span> <b>{j.price}</b></a></li>
+          ))}
+        </ul>
+      </nav>
+
+      {anyMissing && (
+        <div class="notice switch" role="note">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 4v4h4" /><path d="M4 13a8 8 0 0 0 14.3 4.9M20 20v-4h-4" /></svg>
+          <p>
+            <strong>Online booking is moving to a new system.</strong>
+            {notice}
+          </p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  {/* Free consult */}
+  <section class="sec wrap first" aria-labelledby="consult-h">
+    <article id="consult" class="card card--yellow opt consult">
+      <div class="opt-info">
+        <p class="kick">Start here · Free</p>
+        <h2 id="consult-h">Free 30-minute consultation</h2>
+        <p>
+          A <strong>free, no-strings-attached call</strong> with {site.tutor.name} before you book anything.
+          Ask your questions and get a taste of what {site.name} is all about.
+        </p>
+        <ul class="spk">
+          <li>Talk through your music production goals</li>
+          <li>Get your skill level assessed</li>
+          <li>See how lessons can be tailored to you</li>
+        </ul>
+      </div>
+      <div class="opt-buy">
+        <span class="here">Your pick</span>
+        <p class="price"><b>Free</b> <span>30 minutes</span></p>
+        <BookAction key="consult" label="Book your free consult" what="the free consult" />
+      </div>
+    </article>
+  </section>
+
+  {/* 1:1 lessons */}
+  <section class="sec wrap" aria-labelledby="lessons-h">
+    <div class="sec-head">
+      <p class="kick">1:1 Lessons</p>
+      <h2 id="lessons-h">One-to-one lessons</h2>
+      <p>Every hour is one-to-one with {site.tutor.alias}, online. Book a single hour, or buy a pack and pay less for each hour.</p>
+    </div>
+    <div class="plans">
+      {packageRows.map((p) => (
+        <article id={p.key} class:list={['opt', 'plan', { best: p.best }]} aria-labelledby={`${p.key}-h`}>
+          {p.best && <p class="flag">Best value</p>}
+          <div class="plan-main">
+            <span class="here">Your pick</span>
+            <h3 id={`${p.key}-h`}>{p.name}</h3>
+            <p class="p-sub">{p.sub}</p>
+            <p class="rate"><b>{gbp(p.perHour, { pence: true })}</b> <span>per hour</span></p>
+          </div>
+          <div class="plan-side">
+            <dl class="rows">
+              <div><dt>Total</dt><dd>{gbp(p.total, { pence: true })}</dd></div>
+              <div>
+                <dt>You save</dt>
+                <dd>{p.saving > 0 ? gbp(p.saving, { pence: true }) : <><span aria-hidden="true">–</span><span class="visually-hidden">Nothing</span></>}</dd>
+              </div>
+            </dl>
+            <div class="plan-foot">
+              <BookAction
+                key={p.key}
+                label={`${p.hours === 1 ? 'Book' : 'Buy'} ${p.name} · ${gbp(p.total, { pence: true })}`}
+                what={p.hours === 1 ? 'single lessons' : `the ${p.hours}-hour pack`}
+                yellow={p.best}
+              />
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+    {/* TODO: once Cal.com is set up, explain here how pack hours are scheduled (e.g. booked one session at a time). Not stated yet, so left out. */}
+    <div class="incl">
+      <div>
+        <p class="lbl">Lessons cover</p>
+        <ul class="chips">{services.map((s) => <li>{s}</li>)}</ul>
+      </div>
+      <div>
+        <p class="lbl">Specialist in</p>
+        <ul class="chips">{daws.specialist.map((d) => <li>{d}</li>)}</ul>
+      </div>
+      <div>
+        <p class="lbl">Fundamentals apply to</p>
+        <ul class="chips chips--dim">{daws.fundamentals.map((d) => <li>{d}</li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  {/* Workshop */}
+  <section class="sec wrap" aria-labelledby="workshop-h">
+    <article id="workshop" class="card opt ws">
+      <div class="opt-info">
+        <p class="kick">Workshop · {workshop.where}</p>
+        <h2 id="workshop-h">{workshop.title}</h2>
+        <p>A live online masterclass on dubstep bass, taught by {site.tutor.alias}.</p>
+        <ul class="spk">{workshop.points.map((point) => <li>{point}</li>)}</ul>
+        <p class="next">
+          <span class="lbl">Next date</span>
+          {next ? (
+            <strong><time datetime={next.iso}>{next.long}</time></strong>
+          ) : (
+            <>
+              {/* TODO: set workshop.nextDate in src/data/site.ts when the next masterclass is scheduled; the booking button then appears below. */}
+              <strong>Announced soon</strong>
+            </>
+          )}
+        </p>
+        <a class="more" href="/workshops/">More about the masterclass</a>
+      </div>
+      <div class="opt-buy">
+        <span class="here">Your pick</span>
+        <p class="price"><b>{gbp(workshop.price)}</b> <span>per masterclass</span></p>
+        {/* No date, nothing to book: no button even once booking.workshop is set (as on the workshops page and the home page). */}
+        <BookAction
+          key="workshop"
+          label={`Book your place · ${gbp(workshop.price)}`}
+          what="workshops"
+          closed={next ? undefined : 'Booking opens when the next date is announced.'}
+        />
+      </div>
+    </article>
+  </section>
+
+  {/* Paying */}
+  <section class="sec wrap" aria-labelledby="pay-h">
+    <div class="sec-head">
+      <p class="kick">Paying</p>
+      <h2 id="pay-h">Ways to pay</h2>
+      <p>Lessons, packs and workshops are paid for securely at checkout. The free consult costs nothing.</p>
+    </div>
+    {/* TODO: confirm the exact payment methods once Stripe and PayPal are connected to Cal.com, and switch off any that are not offered in payments in src/data/site.ts. */}
+    {payWays.length > 0 && (
+      <ul class="chips" aria-label="Ways to pay at checkout">
+        {payWays.map((w) => <li>{w.label}</li>)}
+      </ul>
+    )}
+    <p class="small">
+      {payments.payLater && 'Buy now, pay later options are shown at checkout and may vary based on your location. '}
+      All prices are in pounds sterling (GBP).
+    </p>
+    <p class="after">
+      <a href="/terms/">Before you pay, read our terms</a>
+      <a href="/faq/">More questions? See the FAQ</a>
+    </p>
+  </section>
+</Base>
+
+<style>
+  /* Hero (.page-hero in global.css) */
+  .lede { margin-top: 20px; max-width: 38em; }
+
+  /* Jump links to each option */
+  .jump { margin-top: clamp(26px, 4vw, 40px); }
+  .jump ul { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .jump li:first-child { grid-column: 1 / -1; }
+  @media (min-width: 640px) {
+    .jump ul { display: flex; flex-wrap: wrap; }
+    .jump li { flex: 1 1 auto; }
+    .jump li:first-child { grid-column: auto; }
+    .jump span { white-space: nowrap; }
+  }
+  .jump a {
+    display: flex; flex-direction: column; gap: 2px; height: 100%; padding: 14px 16px;
+    background: var(--panel); border: 1px solid var(--nav); border-radius: 14px; transition: border-color .2s, transform .2s;
+  }
+  .jump a:hover { border-color: var(--yellow); transform: translateY(-2px); }
+  .jump span { color: var(--muted); font-size: 0.86rem; font-weight: 500; }
+  .jump span::before { content: "\2726"; content: "\2726" / ""; color: var(--yellow); margin-right: 0.45em; }
+  .jump b { color: var(--white); font-size: 1.3rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; }
+  .jump li:first-child a { background: var(--yellow); border-color: var(--yellow); }
+  .jump li:first-child :is(span, b), .jump li:first-child span::before { color: var(--ink); }
+  .jump li:first-child a:hover { border-color: var(--white); }
+
+  /* Moving-system notice (.notice in global.css) */
+  .switch { margin-top: 16px; }
+  .switch p { color: var(--muted); font-size: 0.94rem; }
+  .switch strong { display: block; }
+
+  .first { padding-top: clamp(40px, 6vw, 72px); }
+
+  /* Shared option layout: info + buy panel */
+  .opt { position: relative; scroll-margin-top: 24px; transition: box-shadow .2s; }
+  .opt:target { box-shadow: 0 0 0 3px var(--ink), 0 0 0 6px var(--yellow); }
+  .here {
+    display: none; align-self: flex-start; width: max-content; padding: 0.3em 0.85em; border-radius: 99px;
+    background: var(--yellow); color: var(--ink); font-size: 0.74rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .opt:target .here { display: inline-block; }
+
+  .consult, .ws { display: grid; gap: 24px; border-radius: 22px; padding: clamp(22px, 4vw, 40px); }
+  @media (min-width: 1080px) { .consult, .ws { grid-template-columns: 1.3fr 1fr; gap: 48px; align-items: center; } }
+  .opt-info { display: grid; gap: 12px; align-content: start; }
+  .opt-info h2 { font-size: clamp(1.8rem, 4.2vw, 2.8rem); }
+  .opt-info > p:not(.kick, .next) { max-width: 36em; }
+  .opt-info .spk { margin-top: 4px; font-size: 0.98rem; }
+  .opt-buy { display: grid; gap: 14px; padding-top: 22px; border-top: 1px solid var(--line); }
+  @media (min-width: 1080px) {
+    .opt-buy { padding: 26px; border-radius: 16px; background: var(--panel-2); border: 1px solid var(--nav); }
+    .consult .opt-buy { background: color-mix(in srgb, var(--ink) 6%, transparent); border-color: color-mix(in srgb, var(--ink) 22%, transparent); }
+  }
+  @media (min-width: 640px) and (max-width: 1079px) {
+    .opt-buy { grid-template-columns: auto 1fr; align-items: end; column-gap: 32px; }
+    .opt-buy .here { grid-column: 1 / -1; }
+  }
+
+  .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .price b { color: var(--white); font-size: clamp(2.4rem, 5vw, 3rem); font-weight: 900; letter-spacing: -0.045em; line-height: 1; }
+  .price span { color: var(--muted); font-size: 0.92rem; }
+
+  /* Consult: yellow card, ink text throughout (including the booking note from BookAction) */
+  .consult :is(p, li, .price span) { color: var(--ink); }
+  .consult :global(:is(.soon, .moving p)) { color: var(--ink); }
+  .consult :global(.soon) { border-color: color-mix(in srgb, var(--ink) 45%, transparent); }
+  .consult :global(.soon::before) { color: var(--ink); }
+  .consult .price b { color: var(--ink); }
+  .consult .spk li::before { color: var(--ink); }
+  .consult .here { background: var(--ink); color: var(--yellow); }
+  .consult:target { box-shadow: 0 0 0 3px var(--ink), 0 0 0 6px var(--paper); }
+  .consult .opt-buy { border-top-color: color-mix(in srgb, var(--ink) 22%, transparent); }
+
+  /* Lesson plans */
+  .plans { display: grid; gap: 16px; }
+  .plan {
+    display: flex; flex-direction: column; gap: 6px; padding: 24px 20px 20px;
+    background: var(--panel); border: 2px solid var(--nav); border-radius: 18px;
+  }
+  .plan-main { display: flex; flex-direction: column; gap: 6px; }
+  .plan-side { flex: 1; display: flex; flex-direction: column; }
+  /* Tablet: each plan is a wide card, price on the left, totals and button on the right */
+  @media (min-width: 640px) and (max-width: 1079px) {
+    .plans { gap: 22px; }
+    .plan { display: grid; grid-template-columns: 1fr 1.15fr; align-items: center; gap: 12px 32px; padding: 26px 26px 24px; }
+    .plan .rate { margin-bottom: 0; }
+  }
+  @media (min-width: 1080px) { .plans { grid-template-columns: repeat(3, 1fr); } }
+  .plan.best { border-color: var(--yellow); background: linear-gradient(165deg, color-mix(in srgb, var(--green) 60%, transparent), var(--panel) 62%); }
+  .plan h3 { font-size: 1.4rem; letter-spacing: -0.02em; }
+  .p-sub { color: var(--muted); font-size: 0.9rem; }
+  .rate { display: flex; align-items: baseline; gap: 8px; margin: 12px 0 10px; }
+  .rate b { color: var(--white); font-size: clamp(2.2rem, 4.4vw, 2.9rem); font-weight: 900; letter-spacing: -0.045em; line-height: 1; }
+  .rate span { color: var(--muted); font-size: 0.9rem; }
+  .best .rate b { color: var(--yellow); }
+  .rows { margin: 0; }
+  .rows div { display: flex; justify-content: space-between; gap: 12px; padding-block: 8px; border-top: 1px solid var(--line); font-size: 0.94rem; }
+  .rows dt { color: var(--muted); }
+  .rows dd { margin: 0; color: var(--white); font-weight: 600; }
+  .plan-foot { margin-top: auto; padding-top: 14px; }
+  .plan .here { position: absolute; top: -13px; left: 18px; }
+
+  /* What lessons include */
+  .incl { display: grid; gap: 20px; margin-top: 28px; padding: clamp(20px, 3vw, 28px); border: 1px solid var(--nav); border-radius: var(--radius); }
+  @media (min-width: 900px) { .incl { grid-template-columns: 1.5fr 1fr 1.2fr; gap: 28px; } }
+  .incl > div { display: grid; gap: 10px; align-content: start; }
+
+  /* Workshop card */
+  .ws { background: radial-gradient(80% 120% at 100% 100%, color-mix(in srgb, var(--green) 45%, transparent), transparent 60%), var(--panel); }
+  .ws .opt-info > p:not(.kick, .next) { color: var(--muted); }
+  .next { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .next strong { font-size: 1.15rem; }
+  .more { justify-self: start; padding-block: 4px; color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
+  .more:hover { text-decoration-thickness: 2px; }
+
+  /* Ways to pay */
+  .small { margin-top: 16px; color: var(--muted); font-size: 0.88rem; max-width: 46em; }
+  .after { display: flex; flex-wrap: wrap; gap: 4px 28px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .after a { padding-block: 4px; color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
+  .after a:hover { color: var(--white); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .jump a:hover { transform: none; }
+  }
+</style>

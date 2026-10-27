@@ -1,0 +1,16 @@
+---
+// The brand wave: a green and a yellow bass line, drawn full width. Decorative only.
+// Each page sets its own spacing by passing a class, e.g. <Wave class="hero-wave" /> with .hero-wave { margin: ... } in its own styles.
+// (The 404 page has its own wave that drops out in the middle, so it does not use this.)
+const { class: className, ...rest } = Astro.props;
+---
+<svg class:list={['wave', className]} viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true" focusable="false" {...rest}>
+  <path class="w2" d="M0 50Q14 9 27 50Q41 98 55 50Q68-3 82 50Q95 106 109 50Q123-8 136 50Q150 107 164 50Q177-5 191 50Q205 100 218 50Q232 6 245 50Q259 87 273 50Q286 20 300 50Q314 73 327 50Q341 34 355 50Q368 61 382 50Q395 42 409 50Q423 56 436 50Q450 43 464 50Q477 59 491 50Q505 36 518 50Q532 70 545 50Q559 23 573 50Q586 84 600 50"></path>
+  <path d="M0 50Q15 42 30 50Q45 62 60 50Q75 30 90 50Q105 80 120 50Q135 8 150 50Q165 104 180 50Q195-16 210 50Q225 126 240 50Q255-34 270 50Q285 138 300 50Q315-38 330 50Q345 134 360 50Q375-26 390 50Q405 116 420 50Q435-4 450 50Q465 92 480 50Q495 20 510 50Q525 70 540 50Q555 38 570 50Q585 58 600 50"></path>
+</svg>
+
+<style>
+  .wave { display: block; width: 100%; height: clamp(40px, 6vw, 76px); overflow: visible; }
+  .wave path { fill: none; stroke: var(--yellow); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+  .wave .w2 { stroke: var(--green); stroke-width: 3; }
+</style>

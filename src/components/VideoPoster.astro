@@ -1,0 +1,76 @@
+---
+// A video poster that loads YouTube only when clicked, so the page stays fast and no YouTube cookies are set until then.
+// Without a video ID it links out to the YouTube channel instead, captioned as the channel rather than as one video.
+import { site, video } from '../data/site';
+
+const id = video.youtubeId;
+const href = id ? `https://www.youtube.com/watch?v=${id}` : site.youtube;
+---
+<div class="video" data-youtube-id={id ?? undefined}>
+  <a class="poster" href={href} target={id ? undefined : '_blank'} rel="noopener">
+    <span class="daw" aria-hidden="true"></span>
+    <span class="play" aria-hidden="true"></span>
+    <span class="cap">
+      <span class="kick">{id ? 'Play video' : 'Watch on YouTube'}</span>
+      <span class="cap-t">{id ? video.title : `${site.name} on YouTube`}</span>
+    </span>
+    {!id && <span class="visually-hidden"> (opens YouTube in a new tab)</span>}
+  </a>
+</div>
+
+{id && (
+  <script is:inline>
+    document.querySelectorAll('.video[data-youtube-id]').forEach((box) => {
+      box.querySelector('a').addEventListener('click', (e) => {
+        // Ctrl/Cmd/Shift/Alt-click keeps the link's own behaviour, e.g. opening the video on YouTube in a new tab.
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        const f = document.createElement('iframe');
+        f.src = 'https://www.youtube-nocookie.com/embed/' + box.dataset.youtubeId + '?autoplay=1';
+        f.title = box.querySelector('.cap-t').textContent;
+        f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+        f.allowFullscreen = true;
+        box.replaceChildren(f);
+        // The focused link has just been removed, so move focus to the player rather than let it drop to the page.
+        f.focus();
+      });
+    });
+  </script>
+)}
+
+<style>
+  .video { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--nav); background: var(--panel-2); }
+  @media (min-width: 600px) { .video { aspect-ratio: 16 / 9; } }
+  .video :global(iframe) { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .poster { position: absolute; inset: 0; display: block; }
+  /* .video clips anything outside it (overflow: hidden), which would hide the poster's focus ring, so ring the box instead. */
+  .poster:focus-visible { outline: none; }
+  .video:has(.poster:focus-visible) { outline: 3px solid var(--yellow); outline-offset: 3px; }
+  .daw {
+    --a: linear-gradient(var(--yellow), var(--yellow)); --b: linear-gradient(var(--green), var(--green));
+    --dim: color-mix(in srgb, var(--paper) 40%, transparent);
+    position: absolute; inset: 0; opacity: .6;
+    background:
+      var(--a) 47% 0 / 2px 100% no-repeat,
+      var(--b) 28% 20% / 22% 11% no-repeat,
+      var(--a) 40% 33% / 24% 11% no-repeat,
+      linear-gradient(var(--dim), var(--dim)) 58% 46% / 16% 11% no-repeat,
+      var(--b) 82% 20% / 26% 11% no-repeat,
+      var(--b) 70% 46% / 12% 11% no-repeat,
+      var(--a) 92% 33% / 14% 11% no-repeat,
+      linear-gradient(var(--nav), var(--nav)) 0 0 / 100% 10% no-repeat,
+      linear-gradient(var(--panel), var(--panel)) 0 0 / 17% 100% no-repeat,
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--paper) 7%, transparent) 0 1px, transparent 1px 6.25%),
+      repeating-linear-gradient(color-mix(in srgb, var(--paper) 6%, transparent) 0 1px, transparent 1px 13%),
+      var(--panel-2);
+  }
+  .play {
+    position: absolute; left: 50%; top: 40%; width: clamp(58px, 9vw, 82px); aspect-ratio: 1; transform: translate(-50%, -50%);
+    border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 10px color-mix(in srgb, var(--yellow) 22%, transparent); transition: transform .2s;
+  }
+  .play::before { content: ""; position: absolute; inset: 0; margin: auto; width: 32%; height: 38%; background: var(--ink); clip-path: polygon(0 0, 100% 50%, 0 100%); transform: translateX(10%); }
+  .poster:hover .play { transform: translate(-50%, -50%) scale(1.07); }
+  @media (prefers-reduced-motion: reduce) { .poster:hover .play { transform: translate(-50%, -50%); } }
+  .cap { position: absolute; left: 0; right: 0; bottom: 0; display: grid; gap: 4px; padding: 40px clamp(16px, 3vw, 24px) clamp(14px, 2.5vw, 22px); background: linear-gradient(transparent, color-mix(in srgb, var(--ink) 94%, transparent) 45%); }
+  .cap-t { color: var(--white); font-weight: 700; font-size: clamp(.95rem, 1.9vw, 1.15rem); line-height: 1.3; }
+</style>

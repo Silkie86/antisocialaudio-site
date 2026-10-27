@@ -1,0 +1,157 @@
+---
+// Homepage hero and the two "Pick your path" doors: 1:1 Lessons (lead) and Workshops.
+// DJ bookings deliberately do not get a door here; they live on /dj-bookings/.
+import { site, workshop, nextWorkshop, hourlyRate, services, daws, gbp, bookingHref } from '../../data/site';
+import { cheapest } from '../../data/pricing';
+import Wave from '../Wave.astro';
+
+const serviceLine = services.map((s, i) => (i === 0 ? s : s.toLowerCase())).join(', ');
+const next = nextWorkshop();
+---
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+    <div class="hero-top">
+      <div>
+        <p class="kick">1:1 online bass music production lessons</p>
+        <h1 id="hero-title" class="tag">{site.tagline}</h1>
+      </div>
+      <div class="hero-side">
+        <p>Learn bass music production one-to-one with <strong>{site.tutor.name} aka {site.tutor.alias}</strong>, UK dubstep producer for {site.tutor.years} years and Bitwig Certified Trainer. Or join one of his live workshops on Zoom.</p>
+        <a class="consult-link" href={bookingHref('consult')}>Not sure yet? Book a free 30-min consult</a>
+      </div>
+    </div>
+
+    <Wave class="hero-wave" />
+
+    <h2 class="pick-t">Pick your path</h2>
+    <div class="doors">
+      <article class="card card--green door" aria-labelledby="door-lessons">
+        <div class="door-body">
+          <div class="door-head">
+            <span class="ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M4 15v-3a8 8 0 0 1 16 0v3"></path><rect x="3" y="14" width="4" height="7" rx="1.5"></rect><rect x="17" y="14" width="4" height="7" rx="1.5"></rect></svg>
+            </span>
+            <span class="pill pill--solid">Free 30-min consult</span>
+          </div>
+          <h3 id="door-lessons">1:1 Lessons</h3>
+          <p>Personalised one-on-one virtual music tech classes, from the basics to advanced techniques.</p>
+          <ul class="spk">
+            <li>{serviceLine}</li>
+            <li>{daws.specialist.join(', ')} and more</li>
+          </ul>
+        </div>
+        <div class="door-foot">
+          <div class="door-price">
+            <p class="price"><b>{gbp(hourlyRate)}</b><span>per hour</span></p>
+            <p class="note">From {gbp(cheapest.perHour)}/hr with a {cheapest.hours}-hour pack</p>
+          </div>
+          <div class="door-cta">
+            <a class="btn btn--yellow btn--block" href={bookingHref('lesson')}>Book a lesson</a>
+            <p class="door-links"><a href="#lessons">How it works</a><a href="#prices">Packages</a></p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card door" aria-labelledby="door-workshops">
+        <div class="door-body">
+          <div class="door-head">
+            <span class="ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><rect x="2" y="6" width="14" height="12" rx="2"></rect><path d="M16 10.5 22 7v10l-6-3.5z"></path></svg>
+            </span>
+            <span class="pill pill--solid">{workshop.where}</span>
+          </div>
+          <h3 id="door-workshops">Workshops</h3>
+          <p>Learn live in the <strong>{workshop.title}</strong>.</p>
+          <ul class="spk">
+            {workshop.points.map((point) => <li>{point}</li>)}
+          </ul>
+        </div>
+        <div class="door-foot">
+          <div class="door-price">
+            <p class="price"><b>{gbp(workshop.price)}</b><span>per masterclass</span></p>
+            {next ? (
+              <p class="note">Next date: <time datetime={next.iso}>{next.short}</time></p>
+            ) : (
+              <>
+                {/* TODO: next masterclass date not set yet. Set workshop.nextDate in src/data/site.ts and this shows the date and a booking button. */}
+                <p class="note">Next date announced soon</p>
+              </>
+            )}
+          </div>
+          <div class="door-cta">
+            {next ? (
+              <>
+                <a class="btn btn--block" href={bookingHref('workshop')}>Book a workshop</a>
+                <p class="door-links"><a href="/workshops/">About the workshops</a></p>
+              </>
+            ) : (
+              <a class="btn btn--block" href="/workshops/">See the masterclass</a>
+            )}
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    background: radial-gradient(70% 90% at 90% 0%, color-mix(in srgb, var(--green) 38%, transparent), transparent 62%);
+  }
+  .hero > .wrap { padding-block: clamp(28px, 4.5vw, 56px) clamp(56px, 8vw, 96px); }
+  .hero-top { display: grid; gap: 18px; align-items: end; }
+  .tag { font-size: clamp(2.75rem, 7vw, 5.5rem); font-weight: 900; letter-spacing: -0.045em; line-height: 0.94; margin-top: 12px; }
+  .hero-side p { font-size: clamp(1rem, 1.6vw, 1.125rem); color: var(--muted); max-width: 34em; text-wrap: pretty; }
+  .consult-link {
+    display: inline-block; margin-top: 12px; padding-block: 4px;
+    color: var(--yellow); font-weight: 600; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 2px;
+  }
+  .consult-link:hover { color: var(--white); }
+  @media (min-width: 900px) {
+    .hero-top { grid-template-columns: 1.35fr 1fr; gap: 48px; }
+    .hero-side { padding-bottom: 8px; }
+  }
+
+  .hero-wave { margin: clamp(20px, 3vw, 34px) 0 clamp(16px, 2.2vw, 24px); }
+
+  .pick-t { margin-bottom: 18px; font-size: clamp(1.35rem, 3vw, 1.75rem); line-height: 1.1; }
+
+  .doors { display: grid; gap: 16px; }
+  @media (min-width: 760px) { .doors { grid-template-columns: 1.15fr 1fr; } }
+
+  /* Each door is a .card (the lessons door .card--green); .ico is in global.css too. */
+  .door { display: flex; flex-direction: column; gap: 14px; }
+  .card--green :is(p, .price span) { color: var(--paper); }
+  .door-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .door-body { display: flex; flex-direction: column; gap: 14px; }
+  .door h3 { font-size: clamp(1.55rem, 3vw, 1.9rem); }
+  .door-body > p { color: var(--muted); text-wrap: pretty; }
+
+  .door-foot { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line); display: grid; gap: 16px; align-content: start; }
+  .door-price { display: grid; gap: 4px; }
+  .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .price b { color: var(--white); font-size: 2.4rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+  .price span { color: var(--muted); font-size: 0.9rem; }
+  .note { color: var(--muted); font-size: 0.88rem; }
+  .door-cta { display: grid; gap: 10px; }
+  .door-cta .btn { padding-inline: 0.8em; }
+  .door-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px; font-size: 0.9rem; font-weight: 600; }
+  .door-links a { padding: 6px 2px; color: var(--yellow); text-decoration: underline; text-underline-offset: 4px; }
+  .card--green .door-links a { color: var(--white); }
+  .door-links a:hover { color: var(--white); text-decoration-color: var(--yellow); }
+
+  /* Side by side, the two doors share their rows, so the price lines and buttons line up
+     even when only one door has a line of links under its button. */
+  @media (min-width: 760px) {
+    @supports (grid-template-rows: subgrid) {
+      .door { display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: 14px; }
+      .door-foot { margin-top: 0; }
+    }
+  }
+  /* Wide: price on the left, button on the right, the button column at least 220px and as wide as its label. */
+  @media (min-width: 1100px) {
+    .door-foot { grid-template-columns: 1fr auto; align-items: end; align-content: stretch; column-gap: 24px; }
+    .door-cta { align-self: start; min-width: 220px; }
+    .door-cta .btn { white-space: nowrap; }
+  }
+</style>

@@ -1,0 +1,88 @@
+---
+// FAQ page: every question from src/data/faq.ts, the free consult, and a short "where next" row to finish.
+// The FAQPage structured data is built from the same list, so the page and the schema never drift apart.
+import Base from '../layouts/Base.astro';
+import FaqList from '../components/FaqList.astro';
+import ConsultCard from '../components/ConsultCard.astro';
+import { faq } from '../data/faq';
+import { site, workshop, gbp } from '../data/site';
+import { cheapest } from '../data/pricing';
+
+const pageUrl = `${site.url}/faq/`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  '@id': `${pageUrl}#faq`,
+  url: pageUrl,
+  name: `${site.name} FAQ`,
+  inLanguage: 'en-GB',
+  isPartOf: { '@type': 'WebSite', '@id': `${site.url}/#website`, url: `${site.url}/`, name: site.name },
+  mainEntity: faq.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+};
+
+const description = `Common questions about one-to-one bass music production lessons with ${site.tutor.alias}: what is covered, prices and packs, DAWs, and the free 30-minute consult.`;
+---
+<Base title="FAQ: lessons, prices and booking" description={description} jsonLd={jsonLd}>
+  <section class="page-hero" aria-labelledby="faq-title">
+    <div class="wrap">
+      <p class="kick">FAQ</p>
+      <h1 id="faq-title">Questions before you book</h1>
+      <p class="lede">
+        What you get, what it costs and how booking works. Still not sure?
+        Book a free 30-minute consult and ask {site.tutor.name} yourself.
+      </p>
+    </div>
+  </section>
+
+  <section class="sec wrap faqwrap" aria-label="Questions and answers">
+    <div class="faq">
+      <p class="count lbl">{faq.length} questions</p>
+      <FaqList />
+    </div>
+    <div class="cc">
+      <ConsultCard heading="Still have a question?" />
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="next-title">
+    <h2 id="next-title" class="kick">Where next</h2>
+    <ul class="next">
+      <li><a href="/#lessons">1:1 lessons, from {gbp(cheapest.perHour)}/hr</a></li>
+      <li><a href="/workshops/">{workshop.title}, {gbp(workshop.price)}</a></li>
+    </ul>
+  </section>
+</Base>
+
+<style>
+  /* Hero: the shared .page-hero (global.css), with a little space below it and a narrower heading */
+  .page-hero > .wrap { padding-bottom: clamp(8px, 2vw, 16px); }
+  h1 { max-width: 12em; }
+  .lede { margin-top: 20px; max-width: 36em; text-wrap: pretty; }
+
+  /* Questions + sticky consult card (as on the homepage) */
+  .faqwrap { display: grid; gap: 32px; padding-top: clamp(32px, 5vw, 56px); }
+  .faq { display: grid; align-content: start; }
+  .count { padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  @media (min-width: 900px) {
+    .faqwrap { grid-template-columns: 1.6fr 1fr; gap: 56px; align-items: start; }
+    .cc { position: sticky; top: 24px; }
+  }
+
+  /* Where next: two links on to the lessons and the workshop */
+  .next { display: grid; gap: 10px; margin-top: 14px; }
+  @media (min-width: 720px) { .next { grid-template-columns: 1fr 1fr; gap: 16px; } }
+  .next a {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 100%; min-height: 64px; padding: 14px 18px;
+    background: var(--panel); border: 1px solid var(--nav); border-radius: 14px;
+    color: var(--white); font-weight: 700; line-height: 1.35; transition: border-color .2s;
+  }
+  .next a::after { content: "\2192"; content: "\2192" / ""; flex: none; color: var(--yellow); font-size: 1.25rem; transition: transform .2s; }
+  .next a:hover { border-color: var(--yellow); }
+  .next a:hover::after { transform: translateX(3px); }
+  @media (prefers-reduced-motion: reduce) { .next a:hover::after { transform: none; } }
+</style>

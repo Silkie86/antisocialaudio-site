@@ -1,0 +1,52 @@
+# Response headers for antisocialaudio.co.uk
+#
+# Extra instructions Cloudflare sends to the browser with every page and file: security settings and
+# how long browsers may keep files. Cloudflare reads this file when the site is deployed; it is not
+# published as a page.
+#
+# Format: an address pattern on its own line (* matches anything), then the headers for it on the
+# indented lines below, as "Name: value". Lines starting with # are notes. A request that matches more
+# than one pattern gets the headers from all of them.
+# Docs: developers.cloudflare.com/workers/static-assets/headers/ (Pages uses the same file).
+#
+# These headers go on the website's own files only. They do not reach the replies from the DJ enquiry
+# form's /api/ address, which the Worker (functions/) sends with its own headers.
+#
+# Content-Security-Policy is the list of places the browser may load things from. Anything not on the
+# list is blocked, which stops injected scripts and stops other sites framing ours. The site uses:
+#   script-src  the site itself, small scripts Astro writes into pages ('unsafe-inline', see README),
+#               Cloudflare Turnstile (spam check on the DJ form) and Cloudflare Web Analytics
+#   style-src   the site itself and styles written into pages
+#   frame-src   Turnstile's check box and the YouTube player (privacy-enhanced youtube-nocookie.com)
+#   connect-src the site itself (the enquiry form) and Web Analytics
+# Adding another outside service that runs inside the page, such as a Cal.com or Stripe embed, means
+# adding its address here. Plain links to Cal.com, Stripe, PayPal, Zoom or YouTube need no change.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Permissions-Policy: accelerometer=(), browsing-topics=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000
+
+# Fonts: kept for a year. They never change; if one is ever replaced, give the new file a new name.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Built CSS and JavaScript: kept for a year. Astro puts a fingerprint in each file name
+# (Base.BDOrJHBU.css), so a changed file always gets a new name and visitors get it straight away.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cloudflare's own test addresses for this site (*.workers.dev, and *.pages.dev if it is ever moved to
+# Pages): keep them out of search results so Google only lists antisocialaudio.co.uk.
+https://:worker.:account.workers.dev/*
+  X-Robots-Tag: noindex
+
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex
